@@ -323,15 +323,36 @@
         <!--Grid row-->
 
     </section>
+    <section>
     <!--Section: Examples-->
           <!--Section: Examples-->
+    <div class="row">
         <!--Bình luận trên Fb-->       
-        <div id="fb-root"></div>
+        <div id="fb-root" class="col-lg-0 col-md-12"></div>
         <script async defer crossorigin="anonymous" src="https://connect.facebook.net/vi_VN/sdk.js#xfbml=1&version=v11.0&appId=285078402724803&autoLogAppEvents=1" nonce="M5iCdCdW"></script>
 
         <div class="fb-comments" data-href="https://www.facebook.com/taekwondo.ptit/posts/4247900958662551" data-width="" data-numposts="5">
         </div>
+        <div class="col-lg-1 col-md-12"></div>
         <!--Bình luận trên Fb--> 
+        <div class="col-lg-5 col-md-12">
+			<div class="md-form form-sm"> <i class="fa fa-user prefix grey-text"></i>
+			  <input type="text" id="Search" class="form-control form-control-sm">
+			  <label for="Search">Nhập tên thành viên CLB</label>
+				  <button class="btn btn-primary" id="button_search">Search <i class="fa fa-search ml-1"></i></button>
+			  <div class="text-center mt-4">
+			  </div>
+		   </div>
+			<div class="loginForm">
+			    <label class="loginForm"for="password">Enter password to continue</label>
+			    <input type="password" class="loginForm form-control form-control-sm" id="password" placeholder="Password" style="display: none;" width="500px" height="30px">
+			    <button type="button" class="loginForm btn btn-primary" id="confirmPassword" style="display: none;">Login <i class="fa fa-sign-in ml-1"></i></button>
+			</div>
+            <div id="searchResult"></div>
+		</div>
+        
+    </div>
+    </section>
           <hr class="my-5">
 
           <!--Section: Gallery-->
@@ -516,115 +537,48 @@
           <!--Thông tin thành viên-->
         </div>
         <div class="col-lg-3 col-md-12"> </div>
-        <div class="col-lg-6 col-md-1">
-			<div class="md-form form-sm"> <i class="fa fa-user prefix grey-text"></i>
-			  <input type="text" id="Search" class="form-control form-control-sm">
-			  <label for="Search">Nhập tên thành viên CLB</label>
-				  <button class="btn btn-primary" id="button_search">Search <i class="fa fa-search ml-1"></i></button>
-			  <div class="text-center mt-4">
-			  </div>
-		   </div>
-			<!--div class="md-form form-sm confirmLogin" style="display: none"> <i class="fa fa-user prefix grey-text"></i>
-			  <input type="password" id="password" >
-			  <label for="Search">Enter password to continue</label>
-			  <div class="text-center mt-4">
-				  <button class="btn btn-primary" id="confirmPassword">Login <i class="fa fa-sign-in ml-1"></i></button>
-			  </div>
-		   </div-->
-			<div class="confirmLogin">
-			<label class="confirmLogin"for="password">Enter password to continue</label>
-			<input type="password" class="confirmLogin form-control form-control-sm" id="password" placeholder="Password" style="display: none;" width="500px" height="30px">
-			<button type="button" class="confirmLogin btn btn-primary" id="confirmPassword" style="display: none;">Login <i class="fa fa-sign-in ml-1"></i></button>
-			</div>
-		</div>
         <div class="col-lg-3 col-md-12"> </div>
 
         <!--Grid column-->
-     <script>
-//     document.getElementById('upload').addEventListener('change', readXML)
-// function readFileAsString() {
-//     var files = this.files;
-//     if (files.length === 0) {
-//         console.log('No file is selected');
-//         return;
-//     }
-// 
-//     var reader = new FileReader();
-//     reader.onload = function(event) {
-//         let xml = event.target.result;
-//		 var x = xml.getElementsByTagName("title")[0];
-//		 var y = x.childNodes[0];
-//		 console.log("demo:", y.nodeValue);
-//         console.log('File content:', event.target.result);
-//     };
-//     reader.readAsText(files[0]);
-// }
-//	var xhttp = new XMLHttpRequest();
-//	xhttp.onreadystatechange = function() {
-//    if (this.readyState == 4 && this.status == 200) {
-//        readXML(this);
-//    }
-//};
-//xhttp.open("GET", "books.xml", true);
-//xhttp.send();
-//	function readXML(xml) {
-//		var xmlDoc = xml.responseXML;
-//		document.getElementById("demo").innerHTML =
-//    xmlDoc.getElementsByTagName("title")[0].childNodes[0].nodeValue;
-//	}
-</script>
-<!--button type="button" onclick="loadXMLDoc()">Search</button>
-<button type="button" onclick="testXMLDoc()">Change Content</button>
-<button type="button" onclick="loadXMLDoc()">Change Content</button-->
         <div class="col-lg-5 col-md-12"> </div>
         <div class="col-lg-6 col-md-12">
 		</div>
         <div class="col-lg-3 col-md-12"> </div>
-<br></br>
-<br></br>
-<div id="demo"></div>
 
 <script>
-function testXMLDoc() {
-  var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      var xmlDoc = this.responseXML;
-	  var x = xmlDoc.getElementsByTagName("name")[1];
-    var y = x.childNodes[0];
-      document.getElementById("demo").innerHTML =
-      this.responseText;
-		console.log(y.nodeValue);
-    }
-  };
-  xhttp.open("GET", "text.xml", true);
-  xhttp.send();
-}
-	function loadXMLDoc() {
-  	var xhttp = new XMLHttpRequest();
-  	xhttp.onreadystatechange = function() {
-		if (this.readyState == 4 && this.status == 200) {
-			var xmlDoc	 = this.responseXML;
-			var Table	 = xmlDoc.getElementsByTagName("Table")[0];
-			for (let i = 0; i < Table.getElementsByTagName("Row").length; i++) {
-				var Row  = Table.getElementsByTagName("Row")[i];
-				if ( Row.getElementsByTagName("Cell").length < 2 ) {
-					break;
-				}
-				var Cell = Row.getElementsByTagName("Cell")[1];
-				var Data = Cell.getElementsByTagName("Data")[0];
-				var y = Data.childNodes[0];
-				console.log(y.nodeValue);
-			}
-			document.getElementById("demo").innerHTML =
-				this.responseText;
-		}
-	};
-	xhttp.open("GET", "members.xml", true);
-	xhttp.send();
-	}
+    var searchInput     = document.getElementById("Search");
+	var searchButton    = document.getElementById("button_search");
+	var passwordInput   = document.getElementById("password");
+	var loginButton     = document.getElementById("confirmPassword");
+    var password;
+    var memberXML = new Document;
+    var memberArray = new Array();
+    var xget = new XMLHttpRequest();
+	xget.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+        memberXML = this.responseXML;
+        password = getPassword(memberXML);
+        memberArray = createMemberArray(memberXML);
+        console.log(memberArray);
+        }
+    };
+    xget.open("GET", "members.xml", true);
+    xget.send();
 
-	function getPassword(xmlDoc){
+    function createMemberArray(xmlDoc) {
+        var Table = xmlDoc.getElementsByTagName("Table")[0];
+        var arrayResult = [];
+        for (let i = 1; i < Table.getElementsByTagName("Row").length; i++) {
+            var name = getXML(xmlDoc, i, 1, 0);
+            if (name == "") {
+                break;
+            }
+            arrayResult.push(name);
+        }
+        return arrayResult;
+    }
+
+	function getPassword(xmlDoc) {
 		var Table = xmlDoc.getElementsByTagName("DocumentProperties")[0];
 		var Data  = Table.getElementsByTagName("Password")[0];
 		var res = Data.childNodes[0];
@@ -635,7 +589,7 @@ function testXMLDoc() {
 		var Table = xmlDoc.getElementsByTagName("Table")[0];
 		var Row  = Table.getElementsByTagName("Row")[x];
 		if (Row.getElementsByTagName("Cell").length < 2 ) {
-			return;
+			return "";
 		}
 		var Cell = Row.getElementsByTagName("Cell")[y];
 		var Data = Cell.getElementsByTagName("Data")[z];
@@ -643,26 +597,40 @@ function testXMLDoc() {
 		return res.nodeValue;
 	}
 
-	var input_search = document.getElementById("Search");
-	var button_input_search = document.getElementById("button_search");
-	var input_password = document.getElementById("password");
-	var login_button = document.getElementById("confirmPassword");
+    function strCaseCmp(a, b) {
+        return typeof a === 'string' && typeof b === 'string'
+            ? a.localeCompare(b, undefined, { sensitivity: 'accent' }) === 0
+            : a === b;
+    }
 
-	const newRes = input_password.addEventListener("keyup", function (event) {
+	const newRes = passwordInput.addEventListener("keyup", function (event) {
 		if (event.keyCode === 13) {
 			event.preventDefault();
-			login_button.click();
+			loginButton.click();
 		}
 	});
 
-	const newLocal = login_button.addEventListener("click", function (event) {
+    searchButton.addEventListener("click", function (event) {
+        if (searchInput.value == "") {
+            document.getElementById("searchResult").innerHTML = "Vui lòng nhập tên thành viên cần tìm";
+        } else {
+            $(".loginForm").show();
+            if (passwordInput.value === "taekwondoptit") {
+                loginButton.click();
+            }
+        }
+	});
+		
+	searchInput.addEventListener("keyup", function (event) {
+		if (event.keyCode === 13) {
+			event.preventDefault();
+			searchButton.click();
+		}
+	});
+
+	const newLocal = loginButton.addEventListener("click", function (event) {
 		let result = "";
-		var xget = new XMLHttpRequest();
-		xget.onreadystatechange = function() {
-			if (this.readyState == 4 && this.status == 200) {
-			var xmlGet = this.responseXML;
-			var password = getPassword(xmlGet);
-			if (input_password.value === password) {
+			if (passwordInput.value === password) {
 				var xhttp = new XMLHttpRequest();
 				xhttp.onreadystatechange = function () {
 					if (this.readyState == 4 && this.status == 200) {
@@ -671,7 +639,7 @@ function testXMLDoc() {
 						var found_member = false;
 						for (let i = 0; i < Table.getElementsByTagName("Row").length; i++) {
 							var y = getXML(xmlDoc, i, 1, 0);
-							if (y.toUpperCase() === input_search.value.toUpperCase()) {
+							if (strCaseCmp(y, searchInput.value)) {
 								found_member = true;
 								console.log(y);
 								for (let k = 0; k < 5; k++) {
@@ -696,12 +664,12 @@ function testXMLDoc() {
 									result += value;
 									result += "<br></br>";
 								}
-								document.getElementById("demo").innerHTML = result;
+								document.getElementById("searchResult").innerHTML = result;
 							}
 						}
 						if (found_member == false) {
 							result = "Thành viên không tồn tại";
-							document.getElementById("demo").innerHTML = result;
+							document.getElementById("searchResult").innerHTML = result;
 						}
 					}
 				};
@@ -709,27 +677,9 @@ function testXMLDoc() {
 				xhttp.send();
 			} else {
 				result = "Mật khẩu sai !!!";
-				document.getElementById("demo").innerHTML = result;
+				document.getElementById("searchResult").innerHTML = result;
 			}
-			}
-		};
-		xget.open("GET", "members.xml", true);
-		xget.send();
 	});	
-
-	button_input_search.addEventListener("click", function (event) {
-		$(".confirmLogin").show();
-		if (input_password.value === "taekwondoptit") {
-			login_button.click();
-		}
-	});
-		
-	input_search.addEventListener("keyup", function (event) {
-		if (event.keyCode === 13) {
-			event.preventDefault();
-			button_input_search.click();
-		}
-	});
 </script>
 <!--Thông tin thành viên-->
 </div>
@@ -899,7 +849,7 @@ function testXMLDoc() {
     <script type="text/javascript" src="js/bootstrap.min.js"></script>
     <!-- MDB core JavaScript -->
     <script type="text/javascript" src="js/mdb.min.js"></script>
-    <script src="https://maps.google.com/maps/api/js"></script>
+    <!-- <script src="https://maps.google.com/maps/api/js"></script> -->
     <script>
     $('.carousel').carousel({
         interval: 2000,
@@ -927,7 +877,7 @@ function testXMLDoc() {
   }
 
   // Initialize maps
-  google.maps.event.addDomListener(window, 'load', regular_map);
+//   google.maps.event.addDomListener(window, 'load', regular_map);
 </script>
 </body>
 
