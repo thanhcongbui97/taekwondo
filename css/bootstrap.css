@@ -8978,6 +8978,30 @@ a.text-dark:hover, a.text-dark:focus {
   .container {
     min-width: 992px !important;
   }
+  #hh{
+    margin-top: 10%; 
+    text-align: center;
+    font-size: 60px;
+    font-family: Arial;
+    font-style: Bold ; color :black;
+
+  }
+  .barContainer{
+    width: 100%;
+    margin: auto;
+  }
+  #progress{
+    width: 100%;
+    background-color: #ddd;
+  }
+  #bar{
+     width: 0%;
+     height: 30px;
+     background-color: #4CAF50;
+     text-align: center;
+     line-height: 30px;
+     color: white;
+  }
   .navbar {
     display: none;
   }
