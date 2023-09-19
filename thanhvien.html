@@ -326,7 +326,7 @@
         autocomplete(searchInput, memberArray);
         }
     };
-    xget.open("GET", "members.xml", true);
+    xget.open("GET", "taekwondo_ptit_member_v1.xml", true);
     xget.send();
 
     function autocomplete(inp, arr) {
@@ -434,7 +434,8 @@
         var Table = xmlDoc.getElementsByTagName("Table")[0];
         var arrayResult = [];
         for (let i = 1; i < Table.getElementsByTagName("Row").length; i++) {
-            var name = getXML(xmlDoc, i, 1, 0);
+            var name = getXML(xmlDoc, i, 2, 0);
+            console.log(i, name, Table.getElementsByTagName("Row").length);
             if (name == "") {
                 break;
             }
@@ -451,15 +452,20 @@
 	}
 
 	function getXML(xmlDoc, x, y, z) {
-		var Table = xmlDoc.getElementsByTagName("Table")[0];
-		var Row  = Table.getElementsByTagName("Row")[x];
-		if (Row.getElementsByTagName("Cell").length < 2 ) {
-			return "";
-		}
-		var Cell = Row.getElementsByTagName("Cell")[y];
-		var Data = Cell.getElementsByTagName("Data")[z];
-		var res = Data.childNodes[0];
-		return res.nodeValue;
+        try {
+            var Table = xmlDoc.getElementsByTagName("Table")[0];
+            var Row  = Table.getElementsByTagName("Row")[x];
+            if (Row.getElementsByTagName("Cell").length < 2 ) {
+                return "";
+            }
+            var Cell = Row.getElementsByTagName("Cell")[y];
+            var Data = Cell.getElementsByTagName("Data")[z];
+            var res = Data.childNodes[0];
+            return res.nodeValue;
+        } catch {
+            return "";
+        }
+		
 	}
 
     function strCaseCmp(a, b) {
@@ -503,28 +509,38 @@
                     var Table = xmlDoc.getElementsByTagName("Table")[0];
                     var found_member = false;
                     for (let i = 0; i < Table.getElementsByTagName("Row").length; i++) {
-                        var name = getXML(xmlDoc, i, 1, 0);
+                        var name = getXML(xmlDoc, i, 2, 0);
                         if (strCaseCmp(name, searchInput.value)) {
                             found_member = true;
-                            for (let k = 0; k < 5; k++) {
+                            for (let k = 0; k < 16; k++) {
                                 var key = getXML(xmlDoc, 0, k + 1, 0);
                                 var value = getXML(xmlDoc, i, k + 1, 0);
-                                if (k == 4) {
-                                    key = "Giới tính";
-                                    switch (value) {
-                                        case "g":
-                                            value = "Nữ";
-                                            break;
+                                // if (k == 4) {
+                                //     key = "Giới tính";
+                                //     switch (value) {
+                                //         case "g":
+                                //             value = "Nữ";
+                                //             break;
 
-                                        case "b":
-                                            value = "Nam";
-                                            break;
+                                //         case "b":
+                                //             value = "Nam";
+                                //             break;
 
-                                        default:
+                                //         default:
+                                //     }
+                                // }
+                                if(!value && key){
+                                    value = 'N/A';
+                                } else {
+                                    if(key.toLowerCase() === 'ngày tham gia'.toLowerCase()){
+                                        value =  convertExcelDateToJSDate(value);
+                                    }
+                                    if(key.toLowerCase() === 'ngày sinh'.toLowerCase()){
+                                        value =  convertDate(value);
                                     }
                                 }
                                 result += key;
-                                result += ": ";
+                                if(key) result += ": ";
                                 result += value;
                                 result += "<br></br>";
                             }
@@ -537,13 +553,34 @@
                     }
                 }
             };
-            xhttp.open("GET", "members.xml", true);
+            xhttp.open("GET", "taekwondo_ptit_member_v1.xml", true);
             xhttp.send();
         } else {
             result = "Mật khẩu sai !!!";
             document.getElementById("searchResult").innerHTML = result;
         }
 	});	
+    function convertExcelDateToJSDate(serial){
+        var utc_days  = Math.floor(serial - 25569);
+        var utc_value = utc_days * 86400;                                        
+        var date_info = new Date(utc_value * 1000);
+
+        var day = date_info.getDate();
+        var month = date_info.getMonth() + 1;
+        var year = date_info.getFullYear();
+
+        return `${day < 10 ? '0' + day : day}-${month < 10 ? '0' + month : month}-${year}`;
+    }
+    function convertDate(text){
+        var dateStr = text;
+        var dateObj = new Date(dateStr);
+        var day = dateObj.getDate();
+        var month = dateObj.getMonth() + 1;
+        var year = dateObj.getFullYear();
+
+        var formattedDate = `${day < 10 ? '0' + day : day}-${month < 10 ? '0' + month : month}-${year}`;
+        return formattedDate;  
+    }
 </script>
 <!--Thông tin thành viên-->
 </div>
