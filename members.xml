@@ -442,7 +442,7 @@
     <Cell StyleID="s20"><Data Type="DateTime">2020-10-09T11:44:19.568</Data></Cell>
     <Cell StyleID="s19"><Data Type="String">Hoàng Huyền Trang</Data></Cell>
     <Cell StyleID="s19"><Data Type="String">HANU/ Business Administration</Data></Cell>
-    <Cell StyleID="s19"><Data Type="String">Khác =)))))</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">Khác</Data></Cell>
     <Cell StyleID="s19"><Data Type="String">0976733450/ hoanghuyentrang13121989@gmail.com</Data></Cell>
     <Cell StyleID="s19"><Data Type="String">g</Data><NamedCell
       Name="_FilterDatabase"/></Cell>
@@ -714,7 +714,7 @@
     <Cell StyleID="s19"><Data Type="String">Viên Thông</Data></Cell>
     <Cell StyleID="s19"><Data Type="String">D18</Data></Cell>
     <Cell StyleID="s19"><Data Type="String">0967147919</Data></Cell>
-    <Cell StyleID="s19"><Data Type="String">g</Data><NamedCell
+    <Cell StyleID="s19"><Data Type="String">b</Data><NamedCell
       Name="_FilterDatabase"/></Cell>
    </Row>
    <Row AutoFitHeight="0">
@@ -822,6 +822,69 @@
     <Cell StyleID="s19"><Data Type="String">Viễn Thông - PTIT</Data></Cell>
     <Cell StyleID="s19"><Data Type="String">D16</Data></Cell>
     <Cell StyleID="s19"><Data Type="String">0382886866</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">g</Data><NamedCell
+      Name="_FilterDatabase"/></Cell>
+   </Row>
+   <Row AutoFitHeight="0">
+    <Cell StyleID="s20"><Data Type="DateTime">2020-10-11T08:24:31.642</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">Vũ Bình Minh</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">Viễn Thông - PTIT</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">D15</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">0971811192</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">b</Data><NamedCell
+      Name="_FilterDatabase"/></Cell>
+   </Row>
+   <Row AutoFitHeight="0">
+    <Cell StyleID="s20"><Data Type="DateTime">2020-10-11T08:24:31.642</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">Nguyễn Văn Thành</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">Viễn Thông - PTIT</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">D15</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">0947715480</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">b</Data><NamedCell
+      Name="_FilterDatabase"/></Cell>
+   </Row>
+   <Row AutoFitHeight="0">
+    <Cell StyleID="s20"><Data Type="DateTime">2020-10-11T08:24:31.642</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">Ngô Hồng Nhung</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">HAU - Kiến trúc</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">K17</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">0983829150</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">b</Data><NamedCell
+      Name="_FilterDatabase"/></Cell>
+   </Row>
+   <Row AutoFitHeight="0">
+    <Cell StyleID="s20"><Data Type="DateTime">2020-10-11T08:24:31.642</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">Đào Quang Tân</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">Sư phạm nghệ thuật</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">D20</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">0359311391</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">b</Data><NamedCell
+      Name="_FilterDatabase"/></Cell>
+   </Row>
+   <Row AutoFitHeight="0">
+    <Cell StyleID="s20"><Data Type="DateTime">2020-10-11T08:24:31.642</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">Hoàng Thành Tựu</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">Sư phạm TW</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">D20</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">092335355</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">b</Data><NamedCell
+      Name="_FilterDatabase"/></Cell>
+   </Row>
+   <Row AutoFitHeight="0">
+    <Cell StyleID="s20"><Data Type="DateTime">2020-10-11T08:24:31.642</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">Trần Văn Huy</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">Viễn Thông - PTIT</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">D18</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">0359234609</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">b</Data><NamedCell
+      Name="_FilterDatabase"/></Cell>
+   </Row>
+   <Row AutoFitHeight="0">
+    <Cell StyleID="s20"><Data Type="DateTime">2020-10-11T08:24:31.642</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">Trần Khánh Huy</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">An toàn thông tin - PTIT</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">D18</Data></Cell>
+    <Cell StyleID="s19"><Data Type="String">0359234609</Data></Cell>
     <Cell StyleID="s19"><Data Type="String">g</Data><NamedCell
       Name="_FilterDatabase"/></Cell>
    </Row>
