@@ -73,7 +73,7 @@ class CustomFooter extends HTMLElement {
             <p>
                 <i class="fa fa-envelope mr-3"></i> taekwondo.ptit@gmail.com</p>
             <p>
-                <i class="fa fa-phone mr-3"></i> 086 656 7902</p>
+                <i class="fa fa-phone mr-3"></i> 085 433 6678</p>
             <p>
                 <i class="fa fa-facebook mr-3"></i> CLB Taekwondo - PTIT
                 <a class="nav-link" href="https://www.facebook.com/messages/t/310527119066641"><i class="CLB Taekwondo - PTIT"></i></a>
