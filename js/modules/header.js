@@ -124,5 +124,5 @@ class CustomHeader extends HTMLElement {
     }
 }
 
-// Đăng ký thẻ custom với trình duyệt
+// Header register
 customElements.define('my-header', CustomHeader);
