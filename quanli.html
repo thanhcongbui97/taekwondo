@@ -266,6 +266,9 @@
   // BCN (Ban Chấp Nhiệm - Executive Board) tab in the main sheet
   const SHEET_BCN_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=532990972`;
 
+  // NTNT (Nam Thanh Nữ Tú) tab in the main sheet
+  const SHEET_NTNT_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=1218513579`;
+
   // Registration sheet (Google Form responses - no header row)
   const SHEET2_ID = '1vVLLgEAAWjPLr8pvVjjmah_77LmvDRq80nZnR7od9Tw';
   const SHEET2_GID = '0';
@@ -361,6 +364,14 @@
     NHIEM_KY: 3
   };
 
+  // NTNT tab column indices
+  const SHEET_NTNT_COL = {
+    STT: 0,
+    HO_TEN: 1,
+    CHUC_VU: 2,
+    NHIEM_KY: 3
+  };
+
   // Second registration sheet column indices (has header row)
   const SHEET3_COL = {
     TIMESTAMP: 0,
@@ -416,6 +427,7 @@
   let registrationMap = new Map(); // key: normalize(name)+'|'+dob -> registration record
   let beltRankMap = new Map();     // key: normalize(name)+'|'+dob -> capDai (from exam results)
   let bcnMap = new Map();          // key: normalize(name) -> [{position, term}, ...] (executive board)
+  let ntntMap = new Map();         // key: normalize(name) -> [{position, term}, ...] (nam thanh nữ tú)
 
   // ===== DOM refs =====
   const $searchInput = $('#searchInput');
@@ -651,6 +663,24 @@
     return map;
   }
 
+  // Build NTNT (Nam Thanh Nữ Tú) map from NTNT tab data.
+  // Returns a Map keyed by normalize(name) -> array of {position, term}.
+  function buildNtntMap(data, colMap) {
+    const map = new Map();
+    if (!data || !data.table || !data.table.rows) return map;
+    data.table.rows.forEach(row => {
+      if (!row.c) return;
+      const name = getCellValue(row, colMap.HO_TEN);
+      const chucVu = getCellValue(row, colMap.CHUC_VU);
+      const nhiemKy = getCellValue(row, colMap.NHIEM_KY);
+      if (!name || !chucVu) return;
+      const key = normalize(name);
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push({ position: chucVu, term: nhiemKy });
+    });
+    return map;
+  }
+
   // Build belt rank map from exam results sheet data.
   // Only includes "Đạt" (passed) results. Existing keys in targetMap are NOT
   // overwritten, so Q3 (loaded first) has priority over Q2.
@@ -765,6 +795,17 @@
         console.warn('BCN tab unavailable:', bcnErr);
       }
 
+      // Load NTNT (Nam Thanh Nữ Tú) tab
+      let ntntCount = 0;
+      ntntMap = new Map();
+      try {
+        const ntntData = await jsonpLoad(SHEET_NTNT_URL);
+        ntntMap = buildNtntMap(ntntData, SHEET_NTNT_COL);
+        ntntCount = Array.from(ntntMap.values()).reduce((sum, arr) => sum + arr.length, 0);
+      } catch (ntntErr) {
+        console.warn('NTNT tab unavailable:', ntntErr);
+      }
+
       // Load exam result sheets (Q3 first for priority, Q2 as fallback)
       let examCount = 0;
       beltRankMap = new Map();
@@ -793,6 +834,9 @@
       }
       if (bcnCount > 0) {
         statusHtml += `. <strong>${bcnCount}</strong> chức vụ BCN`;
+      }
+      if (ntntCount > 0) {
+        statusHtml += `. <strong>${ntntCount}</strong> danh hiệu NTNT`;
       }
       statusHtml += `. Nhập tên và/hoặc năm sinh để tìm kiếm.`;
       if (extraColumns.length > 0) {
@@ -971,6 +1015,20 @@
       bcnTagsHtml = `<div class="bcn-tags">${tags}</div>`;
     }
 
+    // Look up NTNT (Nam Thanh Nữ Tú) titles
+    const ntntEntries = ntntMap.get(normalize(hoTen)) || [];
+    let ntntTagsHtml = '';
+    if (ntntEntries.length > 0) {
+      const tags = ntntEntries.map(e => {
+        const isNamThanh = /nam thanh/i.test(e.position);
+        const cls = isNamThanh ? 'ntnt-nam-thanh' : 'ntnt-nu-tu';
+        const icon = isNamThanh ? 'fa-male' : 'fa-female';
+        const label = e.term ? `${e.position} ${e.term}` : e.position;
+        return `<span class="badge ntnt-tag ${cls}"><i class="fas ${icon}"></i> ${escapeHtml(label)}</span>`;
+      }).join(' ');
+      ntntTagsHtml = `<div class="ntnt-tags">${tags}</div>`;
+    }
+
     // Build extra fields HTML from dynamically detected columns
     let extraFieldsHtml = '';
     if (extraColumns.length > 0) {
@@ -996,6 +1054,7 @@
                 <i class="fas fa-user"></i> ${escapeHtml(hoTen) || '(chưa có tên)'}
               </h5>
               ${bcnTagsHtml}
+              ${ntntTagsHtml}
                 ${updatedCapDai ? renderBelt(updatedCapDai) : ''}
               <hr class="my-2">
             ${maHV ? `<div class="field"><i class="fas fa-id-badge"></i><strong>Mã HV:</strong> ${escapeHtml(maHV)}</div>` : ''}

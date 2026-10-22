@@ -74,3 +74,27 @@ text{
 .member-card .bcn-tag i {
     margin-right: 3px;
 }
+.member-card .ntnt-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+.member-card .ntnt-tag {
+    font-size: 0.75rem;
+    font-weight: normal;
+    padding: 4px 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.member-card .ntnt-tag i {
+    margin-right: 3px;
+}
+.member-card .ntnt-nam-thanh {
+    background-color: #007bff;
+    color: #fff;
+}
+.member-card .ntnt-nu-tu {
+    background-color: #e83e8c;
+    color: #fff;
+}
