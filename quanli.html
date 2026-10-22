@@ -100,10 +100,15 @@
             margin-right: 8px;
         }
 
-        /* Registration-only card (orange border to distinguish from official members) */
-        .member-card.member-card-registration {
-            border-left-color: #ff9800;
-        }
+          /* Registration-only card (orange border to distinguish from official members) */
+          .member-card.member-card-registration {
+              border-left-color: #ff9800;
+          }
+
+          /* BCN member card (red border to distinguish from regular members) */
+          .member-card.member-card-bcn {
+              border-left-color: #dc3545;
+          }
 
         /* Logout button (fixed position, top-right) */
         .logout-btn {
@@ -1046,13 +1051,13 @@
       }
     }
 
-    const card = `
-      <div class="col-md-6 col-lg-4 mb-4">
-          <div class="card member-card h-100">
-            <div class="card-body">
-              <h5 class="card-title mb-1">
-                <i class="fas fa-user"></i> ${escapeHtml(hoTen) || '(chưa có tên)'}
-              </h5>
+      const card = `
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card member-card h-100${bcnEntries.length > 0 ? ' member-card-bcn' : ''}">
+              <div class="card-body">
+                <h5 class="card-title mb-1">
+                  <i class="fas fa-user"></i> ${escapeHtml(hoTen) || '(chưa có tên)'}
+                </h5>
               ${bcnTagsHtml}
               ${ntntTagsHtml}
                 ${updatedCapDai ? renderBelt(updatedCapDai) : ''}
