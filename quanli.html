@@ -433,6 +433,7 @@
   let beltRankMap = new Map();     // key: normalize(name)+'|'+dob -> capDai (from exam results)
   let bcnMap = new Map();          // key: normalize(name) -> [{position, term}, ...] (executive board)
   let ntntMap = new Map();         // key: normalize(name) -> [{position, term}, ...] (nam thanh nữ tú)
+  let isLoading = false;           // true while loadData() is in progress
 
   // ===== DOM refs =====
   const $searchInput = $('#searchInput');
@@ -727,10 +728,12 @@
   }
 
   async function loadData() {
-    $loading.show();
-    $errorBox.hide();
-    $results.empty();
-    $statusBar.hide();
+      isLoading = true;
+      $searchBtn.prop('disabled', true);
+      $loading.show();
+      $errorBox.hide();
+      $results.empty();
+      $statusBar.hide();
 
     try {
       // Load member sheet (required)
@@ -850,10 +853,14 @@
           `<br><small class="text-muted"><i class="fas fa-puzzle-piece"></i> ` +
           `Cột mở rộng (${extraColumns.length}): ${labels}</small>`;
       }
-      $statusBar.html(statusHtml).show();
-      $searchInput.focus();
-    } catch (err) {
-      $loading.hide();
+        $statusBar.html(statusHtml).show();
+        $searchInput.focus();
+        isLoading = false;
+        $searchBtn.prop('disabled', false);
+      } catch (err) {
+        $loading.hide();
+        isLoading = false;
+        $searchBtn.prop('disabled', false);
       $errorBox.html(
         '<i class="fas fa-exclamation-triangle"></i> ' +
         'Không tải được dữ liệu: ' + escapeHtml(err.message) +
@@ -863,10 +870,18 @@
   }
 
   // ===== Search =====
-  function performSearch() {
-    const query = normalize($searchInput.val());
-    const yearQuery = $searchYearInput.val().trim();
-    $errorBox.hide();
+    function performSearch() {
+      if (isLoading) {
+        $results.html(
+          '<div class="col-12 text-center text-muted my-4">' +
+          '<i class="fas fa-hourglass-half"></i> Dữ liệu đang được tải, vui lòng đợi...' +
+          '</div>'
+        );
+        return;
+      }
+      const query = normalize($searchInput.val());
+      const yearQuery = $searchYearInput.val().trim();
+      $errorBox.hide();
 
     if (!query && !yearQuery) {
       $results.html(
