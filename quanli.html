@@ -211,7 +211,10 @@
               <div class="spinner-border text-primary" role="status">
                   <span class="sr-only">Đang tải...</span>
               </div>
-              <p class="mt-2 text-muted">Đang tải dữ liệu...</p>
+              <p class="mt-2 text-muted">Đang tải dữ liệu... <span id="loadingPercent">0%</span></p>
+              <div class="progress mt-2 mx-auto" style="max-width: 400px;">
+                  <div id="loadingBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
           </div>
 
           <!--Error-->
@@ -438,9 +441,18 @@
   // ===== DOM refs =====
   const $searchInput = $('#searchInput');
   const $searchYearInput = $('#searchYearInput');
-  const $searchBtn = $('#searchBtn');
-  const $reloadBtn = $('#reloadBtn');
-  const $loading = $('#loading');
+    const $searchBtn = $('#searchBtn');
+    const $reloadBtn = $('#reloadBtn');
+    const $loading = $('#loading');
+    const $loadingBar = $('#loadingBar');
+    const $loadingPercent = $('#loadingPercent');
+
+    // Update loading progress bar (0-100)
+    function updateProgress(percent) {
+      const p = Math.max(0, Math.min(100, Math.round(percent)));
+      $loadingBar.css('width', p + '%').attr('aria-valuenow', p);
+      $loadingPercent.text(p + '%');
+    }
   const $errorBox = $('#errorBox');
   const $results = $('#results');
   const $statusBar = $('#statusBar');
@@ -727,17 +739,24 @@
     });
   }
 
-  async function loadData() {
+    async function loadData() {
       isLoading = true;
       $searchBtn.prop('disabled', true);
       $loading.show();
       $errorBox.hide();
+      updateProgress(0);
+
+      // Total sheets to load: 1 main + 9 registration + 2 exam + 1 BCN + 1 NTNT = 14
+      const TOTAL_SHEETS = 14;
+      let loadedCount = 0;
+      const tick = () => { loadedCount++; updateProgress((loadedCount / TOTAL_SHEETS) * 100); };
       $results.empty();
       $statusBar.hide();
 
-    try {
-      // Load member sheet (required)
-      const memberData = await jsonpLoad(SHEET_URL);
+      try {
+        // Load member sheet (required)
+        const memberData = await jsonpLoad(SHEET_URL);
+        tick();
 
       colLabels = (memberData.table.cols || []).map(c => (c.label || '').trim());
       allRows = (memberData.table.rows || []).filter(r => {
@@ -749,7 +768,7 @@
       let regCount = 0;
       registrationMap = new Map();
       try {
-        const regData2 = await jsonpLoad(SHEET2_URL);
+        const regData2 = await jsonpLoad(SHEET2_URL); tick();
         const map2 = buildRegistrationMap(regData2, SHEET2_COL);
         regCount += map2.size;
         map2.forEach((v, k) => registrationMap.set(k, v));
@@ -757,7 +776,7 @@
         console.warn('Registration sheet 1 unavailable:', regErr);
       }
       try {
-        const regData3 = await jsonpLoad(SHEET3_URL);
+        const regData3 = await jsonpLoad(SHEET3_URL); tick();
         const map3 = buildRegistrationMap(regData3, SHEET3_COL);
         regCount += map3.size;
         mergeRegistrationMaps(registrationMap, map3);
@@ -765,7 +784,7 @@
         console.warn('Registration sheet 2 unavailable:', regErr);
       }
       try {
-        const regData4 = await jsonpLoad(SHEET4_URL);
+        const regData4 = await jsonpLoad(SHEET4_URL); tick();
         const map4 = buildRegistrationMap(regData4, SHEET4_COL);
         regCount += map4.size;
         mergeRegistrationMaps(registrationMap, map4);
@@ -781,12 +800,12 @@
         { url: SHEET9_URL,  colMap: SHEET9_COL,  name: 'sheet 8' },
         { url: SHEET10_URL, colMap: SHEET10_COL, name: 'sheet 9' }
       ];
-      for (const s of extraSheets) {
-        try {
-          const data = await jsonpLoad(s.url);
-          const m = buildRegistrationMap(data, s.colMap);
-          regCount += m.size;
-          mergeRegistrationMaps(registrationMap, m);
+        for (const s of extraSheets) {
+          try {
+            const data = await jsonpLoad(s.url); tick();
+            const m = buildRegistrationMap(data, s.colMap);
+            regCount += m.size;
+            mergeRegistrationMaps(registrationMap, m);
         } catch (e) {
           console.warn(`Registration ${s.name} unavailable:`, e);
         }
@@ -796,7 +815,7 @@
       let bcnCount = 0;
       bcnMap = new Map();
       try {
-        const bcnData = await jsonpLoad(SHEET_BCN_URL);
+        const bcnData = await jsonpLoad(SHEET_BCN_URL); tick();
         bcnMap = buildBcnMap(bcnData, SHEET_BCN_COL);
         bcnCount = Array.from(bcnMap.values()).reduce((sum, arr) => sum + arr.length, 0);
       } catch (bcnErr) {
@@ -807,7 +826,7 @@
       let ntntCount = 0;
       ntntMap = new Map();
       try {
-        const ntntData = await jsonpLoad(SHEET_NTNT_URL);
+        const ntntData = await jsonpLoad(SHEET_NTNT_URL); tick();
         ntntMap = buildNtntMap(ntntData, SHEET_NTNT_COL);
         ntntCount = Array.from(ntntMap.values()).reduce((sum, arr) => sum + arr.length, 0);
       } catch (ntntErr) {
@@ -818,14 +837,14 @@
       let examCount = 0;
       beltRankMap = new Map();
       try {
-        const examData3 = await jsonpLoad(SHEET_Q3_URL);
+        const examData3 = await jsonpLoad(SHEET_Q3_URL); tick();
         buildBeltRankMap(examData3, beltRankMap);
         examCount = beltRankMap.size;
       } catch (examErr) {
         console.warn('Q3/2026 exam sheet unavailable:', examErr);
       }
       try {
-        const examData2 = await jsonpLoad(SHEET_Q2_URL);
+        const examData2 = await jsonpLoad(SHEET_Q2_URL); tick();
         buildBeltRankMap(examData2, beltRankMap);
       } catch (examErr) {
         console.warn('Q2/2026 exam sheet unavailable:', examErr);
