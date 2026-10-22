@@ -263,8 +263,8 @@
   const SHEET_Q3_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=Q3_2026`;
   const SHEET_Q2_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=Q2_2026`;
 
-  // Registration tab (DK) in the main sheet
-  const SHEET_DK_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=DK`;
+  // Registration data is now read directly from the main member sheet (SHEET_ID).
+  // No separate registration sheets are loaded.
 
   // Column index map (0-based, matches the order in the sheet)
   const COL = {
@@ -302,27 +302,10 @@
     KET_QUA: 6
   };
 
-  // Registration tab (DK) column indices
-  const SHEET_DK_COL = {
-    NGUON_DON: 0,
-    TIMESTAMP: 1,
-    HO_TEN: 2,
-    NGAY_SINH: 3,
-    SDT: 4,
-    EMAIL: 5,
-    FACEBOOK: 6,
-    TRUONG: 7,
-    NGUON_BIET: 8,
-    DA_HOC: 9,
-    CHUNG_NHAN: 10,
-    MONG_MUON: 11
-  };
-
   // ===== State =====
   let allRows = [];            // raw rows from member sheet
   let colLabels = [];          // column labels
   let extraColumns = [];       // [{idx, label}] columns not in COL map
-  let registrationMap = new Map(); // key: normalize(name)+'|'+dob -> registration record
   let beltRankMap = new Map();     // key: normalize(name)+'|'+dob -> capDai (from exam results)
 
   // ===== DOM refs =====
@@ -512,52 +495,6 @@
     });
   }
 
-  // Build registration map from registration sheet data, using the given column map.
-  // Returns a Map keyed by normalize(name)+'|'+dob.
-  function buildRegistrationMap(data, colMap) {
-    const map = new Map();
-    if (!data || !data.table || !data.table.rows) return map;
-    data.table.rows.forEach(row => {
-      if (!row.c) return;
-      const name = getCellValue(row, colMap.HO_TEN);
-      const dob = formatDate(getCellValue(row, colMap.NGAY_SINH));
-      if (!name) return;
-      const key = normalize(name) + '|' + dob;
-      map.set(key, {
-        name: name,
-        dob: dob,
-        email: getCellValue(row, colMap.EMAIL),
-        phone: getCellValue(row, colMap.SDT),
-        facebook: getCellValue(row, colMap.FACEBOOK),
-        school: getCellValue(row, colMap.TRUONG),
-        source: getCellValue(row, colMap.NGUON_BIET),
-        learned: getCellValue(row, colMap.DA_HOC),
-        certificate: getCellValue(row, colMap.CHUNG_NHAN),
-        expectations: getCellValue(row, colMap.MONG_MUON)
-      });
-    });
-    return map;
-  }
-
-  // Merge source map into target map. For matching keys, fill in any missing
-  // (empty) fields from source without overwriting existing data.
-  function mergeRegistrationMaps(target, source) {
-    source.forEach((value, key) => {
-      const existing = target.get(key);
-      if (existing) {
-        const merged = { ...existing };
-        Object.keys(value).forEach(k => {
-          if (value[k] && !existing[k]) {
-            merged[k] = value[k];
-          }
-        });
-        target.set(key, merged);
-      } else {
-        target.set(key, value);
-      }
-    });
-  }
-
   // Build belt rank map from exam results sheet data.
   // Only includes "Đạt" (passed) results. Existing keys in targetMap are NOT
   // overwritten, so Q3 (loaded first) has priority over Q2.
@@ -595,17 +532,6 @@
       });
       extraColumns = getExtraColumnIndices();
 
-      // Load registration tab (DK) from main sheet
-      let regCount = 0;
-      registrationMap = new Map();
-      try {
-        const regData = await jsonpLoad(SHEET_DK_URL);
-        registrationMap = buildRegistrationMap(regData, SHEET_DK_COL);
-        regCount = registrationMap.size;
-      } catch (regErr) {
-        console.warn('Registration tab (DK) unavailable:', regErr);
-      }
-
       // Load exam result sheets (Q3 first for priority, Q2 as fallback)
       let examCount = 0;
       beltRankMap = new Map();
@@ -626,9 +552,6 @@
       $loading.hide();
       let statusHtml =
         `<i class="fas fa-database"></i> Đã tải <strong>${allRows.length}</strong> hội viên`;
-      if (regCount > 0) {
-        statusHtml += ` và <strong>${regCount}</strong> hồ sơ đăng ký`;
-      }
       if (examCount > 0) {
         statusHtml += `. Cập nhật <strong>${examCount}</strong> cấp đai từ kết quả thi`;
       }
@@ -666,7 +589,7 @@
       return;
     }
 
-    if (allRows.length === 0 && registrationMap.size === 0) {
+    if (allRows.length === 0) {
       $results.html(
         '<div class="col-12 text-center text-muted my-4">' +
         '<i class="fas fa-hourglass-half"></i> Dữ liệu chưa sẵn sàng, vui lòng đợi.' +
@@ -684,25 +607,10 @@
     }
 
     // Search in member sheet
-    const matches = [];
-    const matchedKeys = new Set();
-
-    allRows.forEach(row => {
+    const matches = allRows.filter(row => {
       const name = normalize(getCellValue(row, COL.HO_TEN));
       const dob = formatDate(getCellValue(row, COL.NGAY_SINH));
-      if (matchesQuery(name, dob)) {
-        matches.push(row);
-        matchedKeys.add(name + '|' + dob);
-      }
-    });
-
-    // Also search in registration-only entries (not already matched with member sheet)
-    registrationMap.forEach((reg, key) => {
-      if (matchedKeys.has(key)) return;
-      const [regName, regDob] = key.split('|');
-      if (matchesQuery(regName, regDob)) {
-        matches.push({ _isRegistrationOnly: true, _regData: reg });
-      }
+      return matchesQuery(name, dob);
     });
 
     const displayQuery = query || ('năm ' + yearQuery);
@@ -710,38 +618,6 @@
   }
 
   // ===== Render =====
-  // Build registration fields HTML for a member card
-  function buildRegistrationFieldsHtml(reg, existingSdt, existingEmail) {
-    if (!reg) return '';
-    const items = [];
-    // Only show email/phone from registration if not already in member sheet
-    if (reg.email && !existingEmail) {
-      items.push(`<div class="field"><i class="fas fa-envelope"></i><strong>Email:</strong> <a href="mailto:${escapeHtml(reg.email)}">${escapeHtml(reg.email)}</a></div>`);
-    }
-    if (reg.phone && !existingSdt) {
-      items.push(`<div class="field"><i class="fas fa-phone"></i><strong>SĐT:</strong> <a href="tel:${escapeHtml(reg.phone)}">${escapeHtml(reg.phone)}</a></div>`);
-    }
-    if (reg.facebook) {
-      const fbUrl = reg.facebook;
-      const fbDisplay = fbUrl.length > 45 ? fbUrl.substring(0, 45) + '...' : fbUrl;
-      items.push(`<div class="field"><i class="fab fa-facebook"></i><strong>Facebook:</strong> <a href="${escapeHtml(fbUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(fbDisplay)}</a></div>`);
-    }
-    if (reg.school) {
-      items.push(`<div class="field"><i class="fas fa-university"></i><strong>Trường:</strong> ${escapeHtml(reg.school)}</div>`);
-    }
-    if (reg.learned) {
-      items.push(`<div class="field"><i class="fas fa-history"></i><strong>Đã học TK:</strong> ${escapeHtml(reg.learned)}</div>`);
-    }
-    if (reg.source) {
-      items.push(`<div class="field"><i class="fas fa-bullhorn"></i><strong>Biết CLB qua:</strong> ${escapeHtml(reg.source)}</div>`);
-    }
-    if (reg.expectations) {
-      items.push(`<div class="field"><i class="fas fa-star"></i><strong>Mong muốn:</strong> ${escapeHtml(reg.expectations)}</div>`);
-    }
-    if (items.length === 0) return '';
-    return `<hr class="my-2"><div class="field-section-title"><i class="fas fa-clipboard-list"></i> Thông tin đăng ký</div>` + items.join('');
-  }
-
   function renderResults(matches, query) {
     $results.empty();
 
@@ -763,11 +639,7 @@
     );
 
     matches.forEach(row => {
-      if (row._isRegistrationOnly) {
-        renderRegistrationOnlyCard(row._regData);
-      } else {
-        renderMemberCard(row);
-      }
+      renderMemberCard(row);
     });
   }
 
@@ -783,11 +655,6 @@
     const diaChi   = getCellValue(row, COL.DIA_CHI);
     const hieuLuc  = getCellValue(row, COL.HIEU_LUC);
     const trinhDo  = getCellValue(row, COL.TRINH_DO);
-
-    // Look up registration data by normalized name + DOB
-    const regKey = normalize(hoTen) + '|' + ngaySinh;
-    const reg = registrationMap.get(regKey);
-    const regFieldsHtml = buildRegistrationFieldsHtml(reg, sdt, email);
 
     // Look up updated belt rank from exam results (Q3/Q2 2026)
     const examKey = normalize(hoTen) + '|' + ngaySinh;
@@ -828,28 +695,7 @@
             ${clb ? `<div class="field"><i class="fas fa-flag"></i><strong>CLB:</strong> ${escapeHtml(clb)}</div>` : ''}
             ${diaChi ? `<div class="field"><i class="fas fa-map-marker-alt"></i><strong>Địa chỉ:</strong> ${escapeHtml(diaChi)}</div>` : ''}
               ${hieuLuc ? `<div class="field"><i class="fas fa-check-circle"></i><strong>Hiệu lực:</strong> ${escapeHtml(hieuLuc)}</div>` : ''}
-              ${regFieldsHtml}
               ${extraFieldsHtml}
-          </div>
-        </div>
-      </div>
-    `;
-    $results.append(card);
-  }
-
-  function renderRegistrationOnlyCard(reg) {
-    const regFieldsHtml = buildRegistrationFieldsHtml(reg, '', '');
-    const card = `
-      <div class="col-md-6 col-lg-4 mb-4">
-        <div class="card member-card h-100 member-card-registration">
-          <div class="card-body">
-            <h5 class="card-title mb-1">
-              <i class="fas fa-user-plus"></i> ${escapeHtml(reg.name) || '(chưa có tên)'}
-            </h5>
-            <span class="badge badge-warning mb-2"><i class="fas fa-clock"></i> Đăng ký mới</span>
-            <hr class="my-2">
-            ${reg.dob ? `<div class="field"><i class="fas fa-birthday-cake"></i><strong>Ngày sinh:</strong> ${escapeHtml(reg.dob)}</div>` : ''}
-            ${regFieldsHtml}
           </div>
         </div>
       </div>
