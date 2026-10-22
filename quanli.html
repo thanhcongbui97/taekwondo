@@ -264,6 +264,11 @@
   const SHEET2_GID = '0';
   const SHEET2_URL = `https://docs.google.com/spreadsheets/d/${SHEET2_ID}/gviz/tq?gid=${SHEET2_GID}`;
 
+  // Second registration sheet (Google Form responses - has header row)
+  const SHEET3_ID = '1qF5Eq28Q1RFb4eE_rh1cCMJIKOFmeafhdGmmVes7Vx8';
+  const SHEET3_GID = '276603415';
+  const SHEET3_URL = `https://docs.google.com/spreadsheets/d/${SHEET3_ID}/gviz/tq?gid=${SHEET3_GID}`;
+
   // Column index map (0-based, matches the order in the sheet)
   const COL = {
     STT: 0,
@@ -306,6 +311,25 @@
     CHUNG_NHAN: 10,
     MONG_MUON: 11,
     MA_SV: 16
+  };
+
+  // Second registration sheet column indices (has header row)
+  const SHEET3_COL = {
+    TIMESTAMP: 0,
+    HO_TEN: 1,
+    NGAY_SINH: 2,
+    SDT: 3,
+    EMAIL: 4,
+    FACEBOOK: 5,
+    TRUONG: 6,
+    MA_SV: 7,
+    MAIL: 8,
+    NGUON_BIET: 9,
+    DA_HOC: 10,
+    CHUNG_NHAN: 11,
+    MONG_MUON: 12,
+    VAO_MES: 13,
+    NOTE: 14
   };
 
   // ===== State =====
@@ -501,31 +525,52 @@
     });
   }
 
-  // Build registration map from registration sheet data
-  function buildRegistrationMap(data) {
+  // Build registration map from a registration sheet's data, using the given column map.
+  // Returns a Map keyed by normalize(name)+'|'+dob.
+  function buildRegistrationMap(data, colMap) {
     const map = new Map();
     if (!data || !data.table || !data.table.rows) return map;
     data.table.rows.forEach(row => {
       if (!row.c) return;
-      const name = getCellValue(row, SHEET2_COL.HO_TEN);
-      const dob = formatDate(getCellValue(row, SHEET2_COL.NGAY_SINH));
+      const name = getCellValue(row, colMap.HO_TEN);
+      const dob = formatDate(getCellValue(row, colMap.NGAY_SINH));
       if (!name) return;
       const key = normalize(name) + '|' + dob;
       map.set(key, {
         name: name,
         dob: dob,
-        email: getCellValue(row, SHEET2_COL.EMAIL),
-        phone: getCellValue(row, SHEET2_COL.SDT),
-        facebook: getCellValue(row, SHEET2_COL.FACEBOOK),
-        school: getCellValue(row, SHEET2_COL.TRUONG),
-        source: getCellValue(row, SHEET2_COL.NGUON_BIET),
-        learned: getCellValue(row, SHEET2_COL.DA_HOC),
-        certificate: getCellValue(row, SHEET2_COL.CHUNG_NHAN),
-        expectations: getCellValue(row, SHEET2_COL.MONG_MUON),
-        studentId: getCellValue(row, SHEET2_COL.MA_SV)
+        email: getCellValue(row, colMap.EMAIL),
+        phone: getCellValue(row, colMap.SDT),
+        facebook: getCellValue(row, colMap.FACEBOOK),
+        school: getCellValue(row, colMap.TRUONG),
+        source: getCellValue(row, colMap.NGUON_BIET),
+        learned: getCellValue(row, colMap.DA_HOC),
+        certificate: getCellValue(row, colMap.CHUNG_NHAN),
+        expectations: getCellValue(row, colMap.MONG_MUON),
+        studentId: getCellValue(row, colMap.MA_SV),
+        note: colMap.NOTE != null ? getCellValue(row, colMap.NOTE) : ''
       });
     });
     return map;
+  }
+
+  // Merge source map into target map. For matching keys, fill in any missing
+  // (empty) fields from source without overwriting existing data.
+  function mergeRegistrationMaps(target, source) {
+    source.forEach((value, key) => {
+      const existing = target.get(key);
+      if (existing) {
+        const merged = { ...existing };
+        Object.keys(value).forEach(k => {
+          if (value[k] && !existing[k]) {
+            merged[k] = value[k];
+          }
+        });
+        target.set(key, merged);
+      } else {
+        target.set(key, value);
+      }
+    });
   }
 
   async function loadData() {
@@ -544,15 +589,24 @@
       });
       extraColumns = getExtraColumnIndices();
 
-      // Load registration sheet (optional - don't fail if unavailable)
+      // Load registration sheets (optional - don't fail if unavailable)
       let regCount = 0;
+      registrationMap = new Map();
       try {
-        const regData = await jsonpLoad(SHEET2_URL);
-        registrationMap = buildRegistrationMap(regData);
-        regCount = registrationMap.size;
+        const regData2 = await jsonpLoad(SHEET2_URL);
+        const map2 = buildRegistrationMap(regData2, SHEET2_COL);
+        regCount += map2.size;
+        map2.forEach((v, k) => registrationMap.set(k, v));
       } catch (regErr) {
-        console.warn('Registration sheet unavailable:', regErr);
-        registrationMap = new Map();
+        console.warn('Registration sheet 1 unavailable:', regErr);
+      }
+      try {
+        const regData3 = await jsonpLoad(SHEET3_URL);
+        const map3 = buildRegistrationMap(regData3, SHEET3_COL);
+        regCount += map3.size;
+        mergeRegistrationMaps(registrationMap, map3);
+      } catch (regErr) {
+        console.warn('Registration sheet 2 unavailable:', regErr);
       }
 
       $loading.hide();
@@ -669,6 +723,9 @@
     }
     if (reg.expectations) {
       items.push(`<div class="field"><i class="fas fa-star"></i><strong>Mong muốn:</strong> ${escapeHtml(reg.expectations)}</div>`);
+    }
+    if (reg.note) {
+      items.push(`<div class="field"><i class="fas fa-sticky-note"></i><strong>Ghi chú:</strong> ${escapeHtml(reg.note)}</div>`);
     }
     if (items.length === 0) return '';
     return `<hr class="my-2"><div class="field-section-title"><i class="fas fa-clipboard-list"></i> Thông tin đăng ký</div>` + items.join('');
