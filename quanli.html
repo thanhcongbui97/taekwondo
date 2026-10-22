@@ -259,6 +259,10 @@
   const SHEET_GID = '2030852021';
   const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${SHEET_GID}`;
 
+  // Exam result sheets (Q3/2026 has priority, Q2/2026 is fallback)
+  const SHEET_Q3_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=Q3_2026`;
+  const SHEET_Q2_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=Q2_2026`;
+
   // Registration sheet (Google Form responses - no header row)
   const SHEET2_ID = '1vVLLgEAAWjPLr8pvVjjmah_77LmvDRq80nZnR7od9Tw';
   const SHEET2_GID = '0';
@@ -313,6 +317,14 @@
     MA_SV: 16
   };
 
+  // Exam result sheet column indices (Q3/2026 and Q2/2026)
+  const EXAM_COL = {
+    HO_TEN: 2,
+    NGAY_SINH: 4,
+    CAP_DANG_KY: 5,
+    KET_QUA: 6
+  };
+
   // Second registration sheet column indices (has header row)
   const SHEET3_COL = {
     TIMESTAMP: 0,
@@ -337,6 +349,7 @@
   let colLabels = [];          // column labels
   let extraColumns = [];       // [{idx, label}] columns not in COL map
   let registrationMap = new Map(); // key: normalize(name)+'|'+dob -> registration record
+  let beltRankMap = new Map();     // key: normalize(name)+'|'+dob -> capDai (from exam results)
 
   // ===== DOM refs =====
   const $searchInput = $('#searchInput');
@@ -554,6 +567,27 @@
     return map;
   }
 
+  // Build belt rank map from exam results sheet data.
+  // Only includes "Đạt" (passed) results. Existing keys in targetMap are NOT
+  // overwritten, so Q3 (loaded first) has priority over Q2.
+  function buildBeltRankMap(data, targetMap) {
+    if (!data || !data.table || !data.table.rows) return;
+    data.table.rows.forEach(row => {
+      if (!row.c) return;
+      const name = getCellValue(row, EXAM_COL.HO_TEN);
+      const dob = formatDate(getCellValue(row, EXAM_COL.NGAY_SINH));
+      const capDangKy = getCellValue(row, EXAM_COL.CAP_DANG_KY);
+      const ketQua = getCellValue(row, EXAM_COL.KET_QUA);
+      if (!name || !capDangKy) return;
+      // Only consider "Đạt" (passed) results
+      if (!ketQua || !/^đạt$/i.test(ketQua.trim())) return;
+      const key = normalize(name) + '|' + dob;
+      if (!targetMap.has(key)) {
+        targetMap.set(key, capDangKy);
+      }
+    });
+  }
+
   // Merge source map into target map. For matching keys, fill in any missing
   // (empty) fields from source without overwriting existing data.
   function mergeRegistrationMaps(target, source) {
@@ -609,11 +643,31 @@
         console.warn('Registration sheet 2 unavailable:', regErr);
       }
 
+      // Load exam result sheets (Q3 first for priority, Q2 as fallback)
+      let examCount = 0;
+      beltRankMap = new Map();
+      try {
+        const examData3 = await jsonpLoad(SHEET_Q3_URL);
+        buildBeltRankMap(examData3, beltRankMap);
+        examCount = beltRankMap.size;
+      } catch (examErr) {
+        console.warn('Q3/2026 exam sheet unavailable:', examErr);
+      }
+      try {
+        const examData2 = await jsonpLoad(SHEET_Q2_URL);
+        buildBeltRankMap(examData2, beltRankMap);
+      } catch (examErr) {
+        console.warn('Q2/2026 exam sheet unavailable:', examErr);
+      }
+
       $loading.hide();
       let statusHtml =
         `<i class="fas fa-database"></i> Đã tải <strong>${allRows.length}</strong> hội viên`;
       if (regCount > 0) {
         statusHtml += ` và <strong>${regCount}</strong> hồ sơ đăng ký`;
+      }
+      if (examCount > 0) {
+        statusHtml += `. Cập nhật <strong>${examCount}</strong> cấp đai từ kết quả thi`;
       }
       statusHtml += `. Nhập tên và/hoặc năm sinh để tìm kiếm.`;
       if (extraColumns.length > 0) {
@@ -778,6 +832,10 @@
     const reg = registrationMap.get(regKey);
     const regFieldsHtml = buildRegistrationFieldsHtml(reg, sdt, email);
 
+    // Look up updated belt rank from exam results (Q3/Q2 2026)
+    const examKey = normalize(hoTen) + '|' + ngaySinh;
+    const updatedCapDai = beltRankMap.get(examKey) || capDai;
+
     // Build extra fields HTML from dynamically detected columns
     let extraFieldsHtml = '';
     if (extraColumns.length > 0) {
@@ -802,7 +860,7 @@
             <h5 class="card-title mb-1">
               <i class="fas fa-user"></i> ${escapeHtml(hoTen) || '(chưa có tên)'}
             </h5>
-            ${capDai ? renderBelt(capDai) : ''}
+              ${updatedCapDai ? renderBelt(updatedCapDai) : ''}
             <hr class="my-2">
             ${maHV ? `<div class="field"><i class="fas fa-id-badge"></i><strong>Mã HV:</strong> ${escapeHtml(maHV)}</div>` : ''}
             ${ngaySinh ? `<div class="field"><i class="fas fa-birthday-cake"></i><strong>Ngày sinh:</strong> ${escapeHtml(ngaySinh)}</div>` : ''}
