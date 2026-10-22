@@ -278,6 +278,20 @@
   const SHEET4_GID = '2094747340';
   const SHEET4_URL = `https://docs.google.com/spreadsheets/d/${SHEET4_ID}/gviz/tq?gid=${SHEET4_GID}`;
 
+  // Additional registration sheets (older forms, some without DOB column)
+  const SHEET5_ID  = '1CegOS-z1YWj94jgpZafSZGwU3-M89tHsyMjEFZekZHE';
+  const SHEET5_URL = `https://docs.google.com/spreadsheets/d/${SHEET5_ID}/gviz/tq?tqx=out:json`;
+  const SHEET6_ID  = '1nxkQlMfmJOMiiGbuAoxWw-M9Wj9yWxVjYxbq_SH6gng';
+  const SHEET6_URL = `https://docs.google.com/spreadsheets/d/${SHEET6_ID}/gviz/tq?tqx=out:json`;
+  const SHEET7_ID  = '1hCet8JR3nFjWHRcVdgsNSSr4_M1VcsrtHXkcW6zd9tY';
+  const SHEET7_URL = `https://docs.google.com/spreadsheets/d/${SHEET7_ID}/gviz/tq?tqx=out:json`;
+  const SHEET8_ID  = '1kuJc7kMPIiJXaCMVA-VratPR0E8XMLrY5DRNXLk06Vw';
+  const SHEET8_URL = `https://docs.google.com/spreadsheets/d/${SHEET8_ID}/gviz/tq?tqx=out:json`;
+  const SHEET9_ID  = '1NvQCtPdbJyx7kCgKhvyVd79Hepes24S2kT6x30UwF4M';
+  const SHEET9_URL = `https://docs.google.com/spreadsheets/d/${SHEET9_ID}/gviz/tq?tqx=out:json`;
+  const SHEET10_ID = '1E46oxX0ASNfc-9_8NKPsK5tljWVSQKjsBOOtX1q2kYI';
+  const SHEET10_URL = `https://docs.google.com/spreadsheets/d/${SHEET10_ID}/gviz/tq?tqx=out:json`;
+
   // Column index map (0-based, matches the order in the sheet)
   const COL = {
     STT: 0,
@@ -366,6 +380,17 @@
     MONG_MUON: 13,
     NOTE: 22
   };
+
+  // SHEET5/6/7: no DOB column
+  const SHEET5_COL = { HO_TEN: 1, SDT: 2, EMAIL: 3, FACEBOOK: 4, TRUONG: 5, NGUON_BIET: 6, MONG_MUON: 7 };
+  const SHEET6_COL = { HO_TEN: 1, SDT: 2, EMAIL: 3, FACEBOOK: 4, TRUONG: 5, NGUON_BIET: 6, MONG_MUON: 7 };
+  const SHEET7_COL = { HO_TEN: 1, SDT: 2, EMAIL: 3, FACEBOOK: 4, TRUONG: 5, NGUON_BIET: 6, MONG_MUON: 7 };
+  // SHEET8: has DOB
+  const SHEET8_COL = { HO_TEN: 1, NGAY_SINH: 2, SDT: 3, EMAIL: 4, FACEBOOK: 5, TRUONG: 6, NGUON_BIET: 7, MONG_MUON: 8 };
+  // SHEET9: has DOB, NOTE at col 13
+  const SHEET9_COL = { HO_TEN: 1, SDT: 2, EMAIL: 3, NGAY_SINH: 4, FACEBOOK: 5, TRUONG: 6, NGUON_BIET: 7, MONG_MUON: 8, NOTE: 13 };
+  // SHEET10: has DOB
+  const SHEET10_COL = { HO_TEN: 1, NGAY_SINH: 2, SDT: 3, EMAIL: 4, FACEBOOK: 5, TRUONG: 6, NGUON_BIET: 7, MONG_MUON: 8 };
 
   // ===== State =====
   let allRows = [];            // raw rows from member sheet
@@ -571,7 +596,7 @@
       const name = getCellValue(row, colMap.HO_TEN);
       const dob = formatDate(getCellValue(row, colMap.NGAY_SINH));
       if (!name) return;
-      const key = normalize(name) + '|' + dob;
+      const key = normalize(name);
       map.set(key, {
         name: name,
         dob: dob,
@@ -673,6 +698,25 @@
       } catch (regErr) {
         console.warn('Registration sheet 3 (GEN16) unavailable:', regErr);
       }
+      // Load additional registration sheets (5-10)
+      const extraSheets = [
+        { url: SHEET5_URL,  colMap: SHEET5_COL,  name: 'sheet 4' },
+        { url: SHEET6_URL,  colMap: SHEET6_COL,  name: 'sheet 5' },
+        { url: SHEET7_URL,  colMap: SHEET7_COL,  name: 'sheet 6' },
+        { url: SHEET8_URL,  colMap: SHEET8_COL,  name: 'sheet 7' },
+        { url: SHEET9_URL,  colMap: SHEET9_COL,  name: 'sheet 8' },
+        { url: SHEET10_URL, colMap: SHEET10_COL, name: 'sheet 9' }
+      ];
+      for (const s of extraSheets) {
+        try {
+          const data = await jsonpLoad(s.url);
+          const m = buildRegistrationMap(data, s.colMap);
+          regCount += m.size;
+          mergeRegistrationMaps(registrationMap, m);
+        } catch (e) {
+          console.warn(`Registration ${s.name} unavailable:`, e);
+        }
+      }
 
       // Load exam result sheets (Q3 first for priority, Q2 as fallback)
       let examCount = 0;
@@ -760,15 +804,14 @@
       const dob = formatDate(getCellValue(row, COL.NGAY_SINH));
       if (matchesQuery(name, dob)) {
         matches.push(row);
-        matchedKeys.add(name + '|' + dob);
+        matchedKeys.add(name);
       }
     });
 
     // Also search in registration-only entries (not already matched with member sheet)
-    registrationMap.forEach((reg, key) => {
-      if (matchedKeys.has(key)) return;
-      const [regName, regDob] = key.split('|');
-      if (matchesQuery(regName, regDob)) {
+    registrationMap.forEach((reg, regName) => {
+      if (matchedKeys.has(regName)) return;
+      if (matchesQuery(regName, '')) {
         matches.push({ _isRegistrationOnly: true, _regData: reg });
       }
     });
@@ -858,8 +901,8 @@
     const hieuLuc  = getCellValue(row, COL.HIEU_LUC);
     const trinhDo  = getCellValue(row, COL.TRINH_DO);
 
-    // Look up registration data by normalized name + DOB
-    const regKey = normalize(hoTen) + '|' + ngaySinh;
+    // Look up registration data by normalized name (registrationMap uses name-only key)
+    const regKey = normalize(hoTen);
     const reg = registrationMap.get(regKey);
     const regFieldsHtml = buildRegistrationFieldsHtml(reg, sdt, email);
 
