@@ -1,0 +1,545 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <title>Quản lý thông tin - Taekwondo PTIT</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Design Bootstrap -->
+    <link href="css/mdb.min.css" rel="stylesheet">
+    <!-- Your custom styles (optional) -->
+    <link href="css/style.css" rel="stylesheet">
+    <style>
+        /* Member card styling (unique to quanli page) */
+        .member-card {
+            border-left: 4px solid #33b5e5;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .member-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .member-card .field {
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+        .member-card .field i {
+            width: 20px;
+            color: #33b5e5;
+            margin-right: 8px;
+        }
+        .member-card .field strong {
+            color: #555;
+        }
+        .rank-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            color: #333;
+            min-width: 90px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .rank-badge .belt-label {
+            flex: 1;
+        }
+        .rank-badge .belt-stripes {
+            display: inline-flex;
+            gap: 2px;
+            margin-left: 6px;
+        }
+        .rank-badge .stripe {
+            display: inline-block;
+            width: 3px;
+            height: 14px;
+            background: #333;
+            border-radius: 1px;
+        }
+        /* Belt colors */
+        .belt-white    { background: #ffffff; border: 1px solid #ccc; }
+        .belt-yellow   { background: #ffd700; }
+        .belt-blue     { background: #1565c0; color: #fff; }
+        .belt-red      { background: #c62828; color: #fff; }
+        .belt-black    { background: #1a1a1a; color: #fff; }
+        /* Stripe colors (contrast with belt) */
+        .belt-white .stripe    { background: #333; }
+        .belt-yellow .stripe   { background: #333; }
+        .belt-blue .stripe     { background: #ffd700; }
+        .belt-red .stripe      { background: #ffd700; }
+        .belt-black .stripe    { background: #ffd700; }
+        .stats-bar {
+            background: #f8f9fa;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        /* Logout button (fixed position, top-right) */
+        .logout-btn {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 100;
+        }
+    </style>
+</head>
+
+<body>
+  <!--Main Navigation-->
+  <my-header></my-header>
+  <!--Main Navigation-->
+
+  <!--Logout button (visible when authenticated)-->
+  <button class="logout-btn" id="logoutBtn" title="Đăng xuất">
+      <i class="fas fa-sign-out-alt"></i> Đăng xuất
+  </button>
+
+  <!--Main layout-->
+  <main class="mt-5">
+      <div class="container">
+
+          <!--Section: Quản lý thông tin-->
+          <section id="quanli">
+              <!--Section: Quản lý thông tin-->
+              <section id="Quản lý thông tin" class="text-center">
+                  <!-- Heading -->
+                  <h2 class="mb-5 font-weight-bold text-center">Quản lý thông tin hội viên</h2>
+                  <!--Grid row-->
+                  <div class="row d-flex justify-content-center mb-4">
+                      <!--Grid column-->
+                      <div class="col-md-8">
+                          <!-- Description -->
+                          <p>Tra cứu thông tin hội viên CLB Taekwondo PTIT. Tính năng dành cho quản trị viên.
+                          </p>
+                      </div>
+              </section>
+          </section>
+
+          <hr class="my-5">
+
+          <!--Section: Tìm kiếm-->
+          <section id="search">
+              <!--Section: Tìm kiếm-->
+              <section id="Tìm kiếm" class="text-center">
+                  <!-- Heading -->
+                  <h2 class="mb-5 font-weight-bold text-center">Tìm kiếm thành viên</h2>
+              </section>
+          </section>
+
+          <!--Search box (MDB style, matching thanhvien.html)-->
+          <section>
+              <!--Section: Examples-->
+              <!--Section: Examples-->
+              <section id="examples" class="text-center">
+              </section>
+              <!--Section: Examples-->
+              <!--Section: Examples-->
+              <div class="row">
+                  <div class="col-lg-3 col-md-12"></div>
+                  <div class="col-lg-6 col-md-12">
+                      <div class="md-form form-sm">
+                          <i class="fa fa-user prefix grey-text"></i>
+                          <input type="text" id="searchInput" class="form-control form-control-sm" autocomplete="off">
+                          <label for="searchInput">Nhập họ và tên thành viên</label>
+                      </div>
+                      <div class="text-center mt-4">
+                          <button class="btn btn-primary" id="searchBtn" type="button">Tìm kiếm <i class="fa fa-search ml-1"></i></button>
+                          <button class="btn btn-outline-secondary" id="reloadBtn" type="button" title="Tải lại dữ liệu">
+                              <i class="fa fa-refresh ml-1"></i> Tải lại
+                          </button>
+                      </div>
+                      <div class="text-center mt-4">
+                          <small class="text-muted">Tìm kiếm không phân biệt hoa/thường, không cần nhập đầy đủ tên.</small>
+                      </div>
+                  </div>
+                  <div class="col-lg-3 col-md-12"></div>
+              </div>
+          </section>
+
+          <!--Status / Stats-->
+          <div id="statusBar" class="stats-bar text-center mt-4" style="display:none;"></div>
+
+          <!--Loading-->
+          <div id="loading" class="text-center my-5" style="display:none;">
+              <div class="spinner-border text-primary" role="status">
+                  <span class="sr-only">Đang tải...</span>
+              </div>
+              <p class="mt-2 text-muted">Đang tải dữ liệu từ Google Sheets...</p>
+          </div>
+
+          <!--Error-->
+          <div id="errorBox" class="alert alert-danger" style="display:none;" role="alert"></div>
+
+          <!--Results-->
+          <div id="results" class="row"></div>
+
+      </div>
+  </main>
+  <!--Main layout-->
+
+  <my-footer></my-footer>
+
+  <!-- SCRIPTS -->
+  <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+  <script type="text/javascript" src="js/popper.min.js"></script>
+  <script type="text/javascript" src="js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="js/mdb.min.js"></script>
+  <script src="js/modules/header.js" defer></script>
+  <script src="js/modules/footer.js" defer></script>
+  <script src="js/quanli-auth.js"></script>
+
+  <script>
+  // ===== Authentication =====
+  // Auth state is stored in sessionStorage by login.html.
+  // If not authed, redirect to login.html.
+  // Logout clears session and redirects to login.html.
+  const AUTH_STORAGE_KEY = 'quanli_authed';
+  const LOGIN_PAGE = 'login.html';
+
+  function isAuthed() {
+    return sessionStorage.getItem(AUTH_STORAGE_KEY) === '1';
+  }
+
+  function handleLogout() {
+    sessionStorage.removeItem(AUTH_STORAGE_KEY);
+    window.location.href = LOGIN_PAGE;
+  }
+
+  // Gate: redirect to login if not authed
+  if (!isAuthed()) {
+    window.location.href = LOGIN_PAGE;
+  }
+
+  document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+
+  // ===== Config =====
+  const SHEET_ID = '1wZEUSJfXwrnG-fyONaRb6Izmm9oWU3xTS5xZt_9bqnY';
+  const SHEET_GID = '2030852021';
+  const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${SHEET_GID}`;
+
+  // Column index map (0-based, matches the order in the sheet)
+  const COL = {
+    STT: 0,
+    MA_HV: 1,
+    HO_TEN: 2,
+    HIEU_LUC: 3,
+    NGAY_SINH: 4,
+    GIOI_TINH: 5,
+    SDT: 6,
+    CMND: 7,
+    TRINH_DO: 8,
+    EMAIL: 9,
+    MA_DON_VI: 10,
+    TO_CHUC: 11,
+    MA_CLB: 12,
+    CLB: 13,
+    MA_HLV: 14,
+    MA_TT: 15,
+    VB_KUKKIWON: 16,
+    NGAY_THAM_GIA: 17,
+    DIA_CHI: 18,
+    GHI_CHU: 19,
+    MA_GAL: 20,
+    MA_GSGK: 21,
+    CAP_DAI: 22,
+    MA_HV_CU: 23
+  };
+
+  // ===== State =====
+  let allRows = [];   // raw rows from sheet
+  let colLabels = []; // column labels
+
+  // ===== DOM refs =====
+  const $searchInput = $('#searchInput');
+  const $searchBtn = $('#searchBtn');
+  const $reloadBtn = $('#reloadBtn');
+  const $loading = $('#loading');
+  const $errorBox = $('#errorBox');
+  const $results = $('#results');
+  const $statusBar = $('#statusBar');
+
+  // ===== Helpers =====
+  function getCellValue(row, idx) {
+    const cell = row.c && row.c[idx];
+    if (!cell) return '';
+    return cell.v == null ? '' : String(cell.v);
+  }
+
+  function formatDate(dateStr) {
+    // Google returns "Date(YYYY,M,D)" for date columns
+    const m = /Date\((\d+),(\d+),(\d+)\)/.exec(dateStr);
+    if (!m) return dateStr || '';
+    const yyyy = m[1];
+    const mm = String(parseInt(m[2], 10) + 1).padStart(2, '0');
+    const dd = String(parseInt(m[3], 10)).padStart(2, '0');
+    return `${dd}/${mm}/${yyyy}`;
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&')
+      .replace(/</g, '<')
+      .replace(/>/g, '>')
+      .replace(/"/g, '"')
+      .replace(/'/g, '&#039;');
+  }
+
+  function normalize(s) {
+    return (s || '')
+      .toLowerCase()
+      .normalize('NFC')
+      .trim();
+  }
+
+  // ===== Belt rendering =====
+  // Parse rank text like "Cấp 10", "4 đẳng", "3 d?ng" and return belt info.
+  function parseRank(rankText) {
+    if (!rankText) return null;
+    const text = rankText.toLowerCase();
+
+    // Geup (cấp): cap 10 -> white, cap 1 -> red 4 stripes
+    let m = text.match(/(?:cấp|cap|c\u1ea5p|c\u00e2\u0323p)\s*(\d+)/);
+    if (m) {
+      const cap = parseInt(m[1], 10);
+      const geupBelts = {
+        10: { color: 'white',  stripes: 0 },
+        9:  { color: 'white',  stripes: 1 },
+        8:  { color: 'white',  stripes: 2 },
+        7:  { color: 'yellow', stripes: 0 },
+        6:  { color: 'blue',   stripes: 1 },
+        5:  { color: 'blue',   stripes: 2 },
+        4:  { color: 'red',    stripes: 1 },
+        3:  { color: 'red',    stripes: 2 },
+        2:  { color: 'red',    stripes: 3 },
+        1:  { color: 'red',    stripes: 4 },
+      };
+      if (geupBelts[cap]) {
+        return { ...geupBelts[cap], label: 'Cấp ' + cap };
+      }
+    }
+
+    // Dan (đẳng): dang 1 -> black, dang 2 -> black 1 stripe, ...
+    m = text.match(/(\d+)\s*(?:đẳng|dang|d\u1eb3ng)/);
+    if (m) {
+      const dang = parseInt(m[1], 10);
+      if (dang >= 1) {
+        return { color: 'black', stripes: dang - 1, label: 'Đẳng ' + dang };
+      }
+    }
+
+    return null;
+  }
+
+  function renderBelt(rankText) {
+    const belt = parseRank(rankText);
+    if (!belt) {
+      // Fallback: just show the text
+      return `<span class="rank-badge mb-2 d-inline-flex belt-black"><span class="belt-label">${escapeHtml(rankText)}</span></span>`;
+    }
+    let stripesHtml = '';
+    if (belt.stripes > 0) {
+      const stripeTags = Array(belt.stripes).fill('<span class="stripe"></span>').join('');
+      stripesHtml = `<span class="belt-stripes">${stripeTags}</span>`;
+    }
+    return `<span class="rank-badge mb-2 d-inline-flex belt-${belt.color}">
+      <span class="belt-label">${escapeHtml(belt.label)}</span>
+      ${stripesHtml}
+    </span>`;
+  }
+
+  // ===== Data loading (JSONP to bypass CORS) =====
+  let jsonpTimeout = null;
+
+  function loadData() {
+    $loading.show();
+    $errorBox.hide();
+    $results.empty();
+    $statusBar.hide();
+
+    // Unique callback name per request
+    const callbackName = 'sheetCallback_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+
+    // Set up the global callback BEFORE injecting the script
+    window[callbackName] = function (data) {
+      // Cleanup
+      clearTimeout(jsonpTimeout);
+      try { delete window[callbackName]; } catch (e) { window[callbackName] = undefined; }
+      const scriptEl = document.getElementById('sheet-jsonp-script');
+      if (scriptEl && scriptEl.parentNode) scriptEl.parentNode.removeChild(scriptEl);
+
+      try {
+        if (!data || data.status !== 'ok' || !data.table) {
+          throw new Error('Sheet trả về trạng thái: ' + (data && data.status ? data.status : 'unknown'));
+        }
+
+        colLabels = (data.table.cols || []).map(c => (c.label || '').trim());
+        allRows = (data.table.rows || []).filter(r => {
+          return r.c && r.c.some(cell => cell && cell.v != null && String(cell.v).trim() !== '');
+        });
+
+        $loading.hide();
+        $statusBar.html(
+          `<i class="fas fa-database"></i> Đã tải <strong>${allRows.length}</strong> hội viên. ` +
+          `Nhập tên để tìm kiếm.`
+        ).show();
+        $searchInput.focus();
+      } catch (err) {
+        $loading.hide();
+        $errorBox.html(
+          '<i class="fas fa-exclamation-triangle"></i> ' +
+          'Không xử lý được dữ liệu: ' + escapeHtml(err.message)
+        ).show();
+      }
+    };
+
+    // Timeout fallback (15s)
+    jsonpTimeout = setTimeout(() => {
+      if (window[callbackName]) {
+        try { delete window[callbackName]; } catch (e) { window[callbackName] = undefined; }
+        const scriptEl = document.getElementById('sheet-jsonp-script');
+        if (scriptEl && scriptEl.parentNode) scriptEl.parentNode.removeChild(scriptEl);
+        $loading.hide();
+        $errorBox.html(
+          '<i class="fas fa-exclamation-triangle"></i> ' +
+          'Quá thời gian chờ phản hồi từ Google Sheets (15s).<br>' +
+          '<small>Kiểm tra kết nối mạng hoặc thử lại sau.</small>'
+        ).show();
+      }
+    }, 15000);
+
+    // Inject <script> tag — JSONP bypasses CORS
+    const script = document.createElement('script');
+    script.id = 'sheet-jsonp-script';
+    script.src = `${SHEET_URL}&tqx=out:json;responseHandler:${callbackName}`;
+    script.onerror = function () {
+      clearTimeout(jsonpTimeout);
+      try { delete window[callbackName]; } catch (e) { window[callbackName] = undefined; }
+      $loading.hide();
+      $errorBox.html(
+        '<i class="fas fa-exclamation-triangle"></i> ' +
+        'Không tải được dữ liệu từ Google Sheets.<br>' +
+        '<small>Có thể sheet đã bị chuyển sang riêng tư, hoặc URL không đúng.</small>'
+      ).show();
+    };
+    document.body.appendChild(script);
+  }
+
+  // ===== Search =====
+  function performSearch() {
+    const query = normalize($searchInput.val());
+    $errorBox.hide();
+
+    if (!query) {
+      $results.html(
+        '<div class="col-12 text-center text-muted my-4">' +
+        '<i class="fas fa-info-circle"></i> Vui lòng nhập tên để tìm kiếm.' +
+        '</div>'
+      );
+      return;
+    }
+
+    if (allRows.length === 0) {
+      $results.html(
+        '<div class="col-12 text-center text-muted my-4">' +
+        '<i class="fas fa-hourglass-half"></i> Dữ liệu chưa sẵn sàng, vui lòng đợi.' +
+        '</div>'
+      );
+      return;
+    }
+
+    const matches = allRows.filter(row => {
+      const name = normalize(getCellValue(row, COL.HO_TEN));
+      return name.includes(query);
+    });
+
+    renderResults(matches, query);
+  }
+
+  // ===== Render =====
+  function renderResults(matches, query) {
+    $results.empty();
+
+    if (matches.length === 0) {
+      $results.html(
+        '<div class="col-12 text-center my-4">' +
+        '<div class="alert alert-warning">' +
+        '<i class="fas fa-search"></i> Không tìm thấy hội viên nào với tên chứa "<strong>' +
+        escapeHtml(query) + '</strong>".' +
+        '</div></div>'
+      );
+      return;
+    }
+
+    $results.append(
+      '<div class="col-12 mb-3">' +
+      '<strong><i class="fas fa-list"></i> Tìm thấy ' + matches.length + ' kết quả</strong>' +
+      '</div>'
+    );
+
+    matches.forEach(row => {
+      const hoTen    = getCellValue(row, COL.HO_TEN);
+      const maHV     = getCellValue(row, COL.MA_HV);
+      const ngaySinh = formatDate(getCellValue(row, COL.NGAY_SINH));
+      const gioiTinh = getCellValue(row, COL.GIOI_TINH);
+      const sdt      = getCellValue(row, COL.SDT);
+      const email    = getCellValue(row, COL.EMAIL);
+      const clb      = getCellValue(row, COL.CLB);
+      const capDai   = getCellValue(row, COL.CAP_DAI);
+      const diaChi   = getCellValue(row, COL.DIA_CHI);
+      const hieuLuc  = getCellValue(row, COL.HIEU_LUC);
+      const trinhDo  = getCellValue(row, COL.TRINH_DO);
+
+      const card = `
+        <div class="col-md-6 col-lg-4 mb-4">
+          <div class="card member-card h-100">
+            <div class="card-body">
+              <h5 class="card-title mb-1">
+                <i class="fas fa-user"></i> ${escapeHtml(hoTen) || '(chưa có tên)'}
+              </h5>
+              ${capDai ? `<span class="rank-badge mb-2 d-inline-block">${escapeHtml(capDai)}</span>` : ''}
+              <hr class="my-2">
+              ${maHV ? `<div class="field"><i class="fas fa-id-badge"></i><strong>Mã HV:</strong> ${escapeHtml(maHV)}</div>` : ''}
+              ${ngaySinh ? `<div class="field"><i class="fas fa-birthday-cake"></i><strong>Ngày sinh:</strong> ${escapeHtml(ngaySinh)}</div>` : ''}
+              ${gioiTinh ? `<div class="field"><i class="fas fa-venus-mars"></i><strong>Giới tính:</strong> ${escapeHtml(gioiTinh)}</div>` : ''}
+              ${sdt ? `<div class="field"><i class="fas fa-phone"></i><strong>SĐT:</strong> <a href="tel:${escapeHtml(sdt)}">${escapeHtml(sdt)}</a></div>` : ''}
+              ${email ? `<div class="field"><i class="fas fa-envelope"></i><strong>Email:</strong> <a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a></div>` : ''}
+              ${trinhDo ? `<div class="field"><i class="fas fa-graduation-cap"></i><strong>Trình độ:</strong> ${escapeHtml(trinhDo)}</div>` : ''}
+              ${clb ? `<div class="field"><i class="fas fa-flag"></i><strong>CLB:</strong> ${escapeHtml(clb)}</div>` : ''}
+              ${diaChi ? `<div class="field"><i class="fas fa-map-marker-alt"></i><strong>Địa chỉ:</strong> ${escapeHtml(diaChi)}</div>` : ''}
+              ${hieuLuc ? `<div class="field"><i class="fas fa-check-circle"></i><strong>Hiệu lực:</strong> ${escapeHtml(hieuLuc)}</div>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+      $results.append(card);
+    });
+  }
+
+  // ===== Events =====
+  $searchBtn.on('click', performSearch);
+  $reloadBtn.on('click', loadData);
+  $searchInput.on('keypress', function (e) {
+    if (e.which === 13) performSearch();
+  });
+
+  // ===== Init =====
+  // (Auth gate at top of script already redirected if not authed)
+  $(document).ready(function () {
+    loadData();
+  });
+  </script>
+
+</body>
+
+</html>

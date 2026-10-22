@@ -50,11 +50,12 @@ class CustomHeader extends HTMLElement {
                         <a class="nav-link dropdown-toggle" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Thông tin</a>
                         <div class="dropdown-menu dropdown-primary" aria-labelledby="navbarDropdownMenuLink">
                             <a class="dropdown-item" href="#">Quy định</a>
-                            <a class="dropdown-item" href="/vophuc.html">Võ phục</a>
-                            <a class="dropdown-item" href="/demo.html">Chương trình học</a>
-                            <a class="dropdown-item" href="/thanhvien.html">Thành viên</a>
-                            <a class="dropdown-item" href="/ghepdoi.html">Ghép đôi</a>
-                            <a class="dropdown-item" href="/spinwheel.html">Vòng quay may mắn</a>
+                            <a class="dropdown-item" href="vophuc.html">Võ phục</a>
+                            <a class="dropdown-item" href="demo.html">Chương trình học</a>
+                            <a class="dropdown-item" href="thanhvien.html">Thành viên</a>
+                            <a class="dropdown-item" href="quanli.html">Quản lý thông tin</a>
+                            <a class="dropdown-item" href="ghepdoi.html">Ghép đôi</a>
+                            <a class="dropdown-item" href="spinwheel.html">Vòng quay may mắn</a>
                         </div>
                     </li>
                 </ul>
@@ -103,8 +104,7 @@ class CustomHeader extends HTMLElement {
 
                       <!-- Description -->
                       <h4 class="white-text my-4">CLB võ thuật của Học viện Công nghệ Bưu chính Viễn thông</h4>
-                      <button type="button" class="btn btn-outline-white"><a href="#end_headers" class="white-text my-4"><span></span>Tìm hiểu thêm</a><i class="fa fa-book ml-2"></i></button>
-                      <section id="end_headers"></section>
+                      <a href="login.html#Đăng nhập" class="btn btn-outline-white">Quản lý thông tin <i class="fa fa-book ml-2"></i></a>
                   </div>
 
               </div>

@@ -1,0 +1,228 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <link rel="shortcut icon" href="favicon.ico">
+    <title>Đăng nhập - Taekwondo PTIT</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Design Bootstrap -->
+    <link href="css/mdb.min.css" rel="stylesheet">
+    <!-- Your custom styles (optional) -->
+    <link href="css/style.css" rel="stylesheet">
+    <style>
+        /* Offset for fixed navbar when scrolling to anchor */
+        #Đăng nhập {
+            scroll-margin-top: 80px;
+        }
+        .login-error {
+            color: #dc3545;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 14px;
+            min-height: 1.2em;
+        }
+        .shake {
+            animation: shake 0.4s;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+        .toggle-pw {
+            position: absolute;
+            right: 0;
+            top: 0;
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            padding: 0 12px;
+            height: 100%;
+            font-size: 1rem;
+        }
+        .toggle-pw:hover {
+            color: #333;
+        }
+        .pw-wrapper {
+            position: relative;
+        }
+    </style>
+</head>
+
+<body>
+  <!--Main Navigation-->
+  <my-header></my-header>
+  <!--Main Navigation-->
+
+  <!--Main layout-->
+  <main class="mt-5">
+      <div class="container">
+
+          <!--Section: Đăng nhập-->
+          <section id="login">
+              <!--Section: Đăng nhập-->
+              <section id="Đăng nhập" class="text-center">
+                  <!-- Heading -->
+                  <h2 class="mb-5 font-weight-bold text-center">Đăng nhập</h2>
+                  <!--Grid row-->
+                  <div class="row d-flex justify-content-center mb-4">
+                      <!--Grid column-->
+                      <div class="col-md-8">
+                          <!-- Description -->
+                          <p>Vui lòng nhập mật khẩu để truy cập trang Quản lý thông tin hội viên.
+                          </p>
+                      </div>
+              </section>
+          </section>
+
+          <hr class="my-5">
+
+          <!--Login form (MDB style, matching thanhvien.html)-->
+          <section>
+              <!--Section: Examples-->
+              <!--Section: Examples-->
+              <section id="examples" class="text-center">
+              </section>
+              <!--Section: Examples-->
+              <!--Section: Examples-->
+              <div class="row">
+                  <div class="col-lg-3 col-md-12"></div>
+                  <div class="col-lg-6 col-md-12">
+                      <form id="loginForm" autocomplete="off">
+                          <div class="md-form form-sm pw-wrapper">
+                              <i class="fa fa-lock prefix grey-text"></i>
+                              <input type="password" id="passwordInput" class="form-control form-control-sm" required autofocus>
+                              <label for="passwordInput">Mật khẩu</label>
+                              <button type="button" class="toggle-pw" id="togglePw" tabindex="-1" title="Hiện/ẩn mật khẩu">
+                                  <i class="fa fa-eye"></i>
+                              </button>
+                          </div>
+                          <div class="text-center mt-4">
+                              <button type="submit" class="btn btn-primary" id="loginBtn">
+                                  <i class="fa fa-sign-in-alt mr-1"></i> Đăng nhập
+                              </button>
+                              <a href="index.html" class="btn btn-outline-secondary">
+                                  <i class="fa fa-arrow-left mr-1"></i> Về trang chủ
+                              </a>
+                          </div>
+                          <div class="login-error" id="loginError"></div>
+                      </form>
+                  </div>
+                  <div class="col-lg-3 col-md-12"></div>
+              </div>
+          </section>
+
+      </div>
+  </main>
+  <!--Main layout-->
+
+  <my-footer></my-footer>
+
+  <!-- SCRIPTS -->
+  <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+  <script type="text/javascript" src="js/popper.min.js"></script>
+  <script type="text/javascript" src="js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="js/mdb.min.js"></script>
+  <script src="js/modules/header.js" defer></script>
+  <script src="js/modules/footer.js" defer></script>
+  <script src="js/quanli-auth.js"></script>
+
+  <script>
+  const AUTH_STORAGE_KEY = 'quanli_authed';
+  const TARGET_PAGE = 'quanli.html';
+
+  async function sha256(text) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+    return Array.from(new Uint8Array(buf))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+  }
+
+  function isAuthed() {
+    return sessionStorage.getItem(AUTH_STORAGE_KEY) === '1';
+  }
+
+  function setAuthed(v) {
+    if (v) sessionStorage.setItem(AUTH_STORAGE_KEY, '1');
+    else sessionStorage.removeItem(AUTH_STORAGE_KEY);
+  }
+
+  function showError(msg) {
+    const errEl = document.getElementById('loginError');
+    errEl.textContent = msg;
+    const card = document.getElementById('loginForm');
+    card.classList.remove('shake');
+    void card.offsetWidth;
+    card.classList.add('shake');
+  }
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    const pw = document.getElementById('passwordInput').value;
+    const btn = document.getElementById('loginBtn');
+    const hash = window.QUANLI_PASSWORD_HASH || '';
+
+    if (!hash) {
+      showError('Lỗi: không tải được file cấu hình (js/quanli-auth.js).');
+      return;
+    }
+
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin mr-1"></i> Đang kiểm tra...';
+
+    try {
+      const inputHash = await sha256(pw);
+      if (inputHash === hash) {
+        setAuthed(true);
+        btn.innerHTML = '<i class="fa fa-check mr-1"></i> Thành công!';
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-success');
+        setTimeout(() => { window.location.href = TARGET_PAGE; }, 500);
+      } else {
+        showError('Mật khẩu không đúng. Vui lòng thử lại.');
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+        document.getElementById('passwordInput').focus();
+        document.getElementById('passwordInput').select();
+      }
+    } catch (err) {
+      showError('Lỗi: ' + err.message);
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+    }
+  }
+
+  // Toggle password visibility
+  document.getElementById('togglePw').addEventListener('click', function () {
+    const pwInput = document.getElementById('passwordInput');
+    const icon = this.querySelector('i');
+    if (pwInput.type === 'password') {
+      pwInput.type = 'text';
+      icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+      pwInput.type = 'password';
+      icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+  });
+
+  document.getElementById('loginForm').addEventListener('submit', handleLogin);
+
+  // If already authed, skip login and go straight to target
+  if (isAuthed()) {
+    window.location.href = TARGET_PAGE;
+  }
+  </script>
+
+</body>
+
+</html>

@@ -1,14 +1,15 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <link rel="shortcut icon" href="/favicon.ico">
-    <title>Câu lạc bộ Taekwondo-PTIT</title>
+    <link rel="shortcut icon" href="favicon.ico">
+    <title>Ghép đôi - Taekwondo PTIT</title>
     <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <!-- Bootstrap core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
@@ -16,6 +17,69 @@
     <link href="css/mdb.min.css" rel="stylesheet">
     <!-- Your custom styles (optional) -->
     <link href="css/style.css" rel="stylesheet">
+    <style>
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-top: none;
+            z-index: 99;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+        }
+        .autocomplete-items div {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #ddd;
+        }
+        .autocomplete-items div:hover {
+            background-color: #e9ecef;
+        }
+        .autocomplete-active {
+            background-color: #33b5e5 !important;
+            color: #ffffff;
+        }
+        .progress-wrapper {
+            margin-top: 20px;
+            text-align: center;
+        }
+        #progress {
+            width: 100%;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            height: 24px;
+            margin-top: 8px;
+        }
+        #bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #33b5e5, #20c997);
+            color: white;
+            text-align: center;
+            line-height: 24px;
+            font-size: 0.85rem;
+            transition: width 0.05s linear;
+        }
+        #hh {
+            font-weight: 500;
+            color: #555;
+            min-height: 1.5em;
+        }
+        #Result {
+            margin-top: 16px;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+        .ratio-display {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #e91e63;
+            margin: 16px 0;
+        }
+    </style>
 </head>
 
 <body>
@@ -24,521 +88,364 @@
   <!--Main Navigation-->
 
   <!--Main layout-->
-  <!--Main layout-->
   <main class="mt-5">
       <div class="container">
 
-          <!--Section: Chi tiết-->
-          <section id="best-features">
-            <!--Section: Chi tiết-->
-            <section id="Chi tiết" class="text-center">
-                <i class="fa fa-heart fa-3x red-text" ></i>
-                <!-- Heading -->
-                <h2 class="mb-5">Ghép đôi</h2>
-                <!--Grid row-->
-                <div class="row d-flex justify-content-center mb-4">
-
-                    <!--Grid column-->
-                    <div class="col-md-8">
-                        <!-- Description -->
-                        <p> <strong>Bạn có crush ai không, cùng thử xem 2 bạn có hợp nhau không nhé ! </strong>                  
-                        </p>
-                    </div>
+          <!--Section: Ghép đôi-->
+          <section id="ghepdoi">
+              <!--Section: Ghép đôi-->
+              <section id="Ghép đôi" class="text-center">
+                  <i class="fa fa-heart fa-3x red-text"></i>
+                  <!-- Heading -->
+                  <h2 class="mb-5 font-weight-bold text-center">Ghép đôi</h2>
+                  <!--Grid row-->
+                  <div class="row d-flex justify-content-center mb-4">
+                      <!--Grid column-->
+                      <div class="col-md-8">
+                          <!-- Description -->
+                          <p><strong>Bạn có crush ai không, cùng thử xem 2 bạn có hợp nhau không nhé!</strong>
+                          </p>
+                      </div>
               </section>
           </section>
+
           <hr class="my-5">
-          <!--Section: Examples-->
-          <!--Section: Examples-->
-    <section id="examples" class="text-center">
-    </section>
-    <!--Tìm kiếm thành viên-->
-    <section>
-        <!--Section: Examples-->
+
+          <!--Search inputs (MDB style, matching thanhvien.html)-->
+          <section>
               <!--Section: Examples-->
-        <div class="row">
-            <div class="col-lg-3 col-md-12"></div>
-            <div class="col-lg-6 col-md-12">
-                <div class="md-form form-sm"> <i class="fa fa-user prefix grey-text"></i>
-                  <input type="text" id="searchInput1" class="form-control form-control-sm" autocomplete="off">
-                  <label for="searchInput1">Nhập tên của bạn</label>
-                  
-                </div>
-                <div class="md-form form-sm"> <i class="fa fa-user prefix grey-text"></i>
-                <input type="text" id="searchInput2" class="form-control form-control-sm" autocomplete="off">
-                  <label for="searchInput2">Nhập tên crush của bạn</label>
+              <!--Section: Examples-->
+              <section id="examples" class="text-center">
+              </section>
+              <!--Section: Examples-->
+              <!--Section: Examples-->
+              <div class="row">
+                  <div class="col-lg-3 col-md-12"></div>
+                  <div class="col-lg-6 col-md-12">
+                      <div class="md-form form-sm">
+                          <i class="fa fa-user prefix grey-text"></i>
+                          <input type="text" id="searchInput1" class="form-control form-control-sm" autocomplete="off">
+                          <label for="searchInput1">Nhập tên của bạn</label>
+                      </div>
+                      <div class="md-form form-sm">
+                          <i class="fa fa-heart prefix grey-text"></i>
+                          <input type="text" id="searchInput2" class="form-control form-control-sm" autocomplete="off">
+                          <label for="searchInput2">Nhập tên crush của bạn</label>
+                      </div>
+                      <div class="text-center mt-4">
+                          <button class="btn btn-primary" id="searchButton">Tính toán <i class="fa fa-search ml-1"></i></button>
+                          <button class="btn btn-outline-secondary" id="reloadBtn" type="button" title="Tải lại dữ liệu">
+                              <i class="fa fa-refresh ml-1"></i> Tải lại
+                          </button>
+                      </div>
+
+                      <!--Status / Stats-->
+                      <div id="statusBar" class="stats-bar text-center mt-4" style="display:none;"></div>
+
+                      <!--Loading-->
+                      <div id="loading" class="text-center my-3" style="display:none;">
+                          <div class="spinner-border spinner-border-sm text-primary" role="status">
+                              <span class="sr-only">Đang tải...</span>
+                          </div>
+                          <span class="ml-2 text-muted">Đang tải dữ liệu...</span>
+                      </div>
+
+                      <!--Error-->
+                      <div id="errorBox" class="alert alert-danger mt-3" style="display:none;" role="alert"></div>
+
+                      <!--Progress bar-->
+                      <div class="progress-wrapper">
+                          <div id="hh"></div>
+                          <div id="progress">
+                              <div id="bar"></div>
+                          </div>
+                      </div>
+
+                      <!--Result-->
+                      <div id="Result"></div>
                   </div>
-                  <div class="text-center mt-4">
-                    <button class="btn btn-primary" id="searchButton">Tính toán <i class="fa fa-search ml-1"></i></button>
-                  </div>
-                  <div id="Result"></div>
-                  <div class="barContainer">
-                    <div id='hh'></div>
-                    <div id = 'progress'>
-                        <div id='bar'></div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-12"></div>
-        </div>
-        </section>
-          <hr class="my-5">
-
-          <!--Section: Gallery-->
-          <!--Section: Gallery-->
-  <section id="gallery">
-
-      <!-- Heading -->
-      <h2 class="mb-5 font-weight-bold text-center">Tin tức mới</h2>
-
-      <!--Grid row-->
-      <div class="row">
-
-          <!--Grid column-->
-          <!--Grid column-->
-<div class="col-md-6 mb-4">
-
-    <!--Carousel Wrapper-->
-    <a href="" class="link">
-        <h6 class="pb-1"><i class="fa fa-heart"></i><strong> Sự kiện đang diễn ra </strong></h6>
-    </a>
-    <h4 class="mb-3"><strong>Hot: The Amazing race 2021</strong></h4>
-    <div id="carousel-example-1z" class="carousel slide carousel-fade" data-ride="carousel">
-        <!--Indicators-->
-        <ol class="carousel-indicators">
-            <li data-target="#carousel-example-1z" data-slide-to="0" class="active"></li>
-            <li data-target="#carousel-example-1z" data-slide-to="1"></li>
-            <li data-target="#carousel-example-1z" data-slide-to="2"></li>
-        </ol>
-        <!--/.Indicators-->
-        <!--Slides-->
-        <div class="carousel-inner z-depth-1-half" role="listbox">
-            <!--First slide-->
-            <div class="carousel-item active">
-                <img class="d-block w-100" src="https://mdbootstrap.com/img/Photos/Others/images/84.jpg" alt="First slide">
-            </div>
-            <!--/First slide-->
-            <!--Second slide-->
-            <div class="carousel-item">
-                <img class="d-block w-100" src="https://mdbootstrap.com/img/Photos/Others/images/85.jpg" alt="Second slide">
-            </div>
-            <!--/Second slide-->
-            <!--Third slide-->
-            <div class="carousel-item">
-                <img class="d-block w-100" src="https://mdbootstrap.com/img/Photos/Others/images/86.jpg" alt="Third slide">
-            </div>
-            <!--/Third slide-->
-        </div>
-        <!--/.Slides-->
-        <!--Controls-->
-        <a class="carousel-control-prev" href="#carousel-example-1z" role="button" data-slide="prev">
-            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-            <span class="sr-only">Previous</span>
-        </a>
-        <a class="carousel-control-next" href="#carousel-example-1z" role="button" data-slide="next">
-            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-            <span class="sr-only">Next</span>
-        </a>
-        <p><a><strong>Cập nhật ngày</strong></a> xx/xx/20xx</p>
-        <a class="btn btn-primary btn-md">Tìm hiểu thêm</a>
-        <!--/.Controls-->
-    </div>
-    <!--/.Carousel Wrapper-->
-
-</div>
-<!--Grid column-->
-          <div class="col-md-6 mb-4">
-            <!--Grid column-->
-            <div class="col-md-12">
-                <!--cmt FB-->
-                <div id="fb-root" class="col-lg-1 col-md-6"></div>
-                <script async defer crossorigin="anonymous" src="https://connect.facebook.net/vi_VN/sdk.js#xfbml=1&version=v11.0&appId=285078402724803&autoLogAppEvents=1" nonce="M5iCdCdW"></script>        
-                <div class="fb-comments" data-href="https://www.facebook.com/taekwondo.ptit/posts/4247900958662551" data-width="515" data-numposts="2">
-                </div>
-                <div class="col-lg-1 col-md-12"></div>
-                <!--cmt fb-->
-            </div>
-            <!--Grid column-->
-
-
-          </div>
-          <!--Grid column-->
-
-          <!--Grid column-->
-          <div class="col-md-6">
-
-
-
-          </div>
-          <!--Grid column-->
-
-      </div>
-      <!--Grid row-->
-
-  </section>
-  <!--Section: Gallery-->
-          <!--Section: Gallery-->
-
-          <hr class="my-5">
-
-          <!--Section: Contact-->
-          <!--Section: Contact-->
-    <section id="contact">
-
-        <!-- Heading -->
-        <h2 class="mb-5 font-weight-bold text-center">Contact us</h2>
-
-        <!--Grid row-->
-        <div class="row">
-
-          <!--Grid column-->
-    <div class="col-lg-5 col-md-12">
-      <!-- Form contact -->
-      <form class="p-5">
-        <div class="md-form form-sm"> <i class="fa fa-user prefix grey-text"></i>
-          <input type="text" id="form3" class="form-control form-control-sm">
-          <label for="form3">Your name</label>
-        </div>
-        <div class="md-form form-sm"> <i class="fa fa-envelope prefix grey-text"></i>
-          <input type="text" id="form2" class="form-control form-control-sm">
-          <label for="form2">Your email</label>
-        </div>
-        <div class="md-form form-sm"> <i class="fa fa-tag prefix grey-text"></i>
-          <input type="text" id="form32" class="form-control form-control-sm">
-          <label for="form34">Subject</label>
-        </div>
-        <div class="md-form form-sm"> <i class="fa fa-pencil prefix grey-text"></i>
-          <textarea type="text" id="form8" class="md-textarea form-control form-control-sm" rows="4"></textarea>
-          <label for="form8">Your message</label>
-        </div>
-        <div class="text-center mt-4">
-          <button class="btn btn-primary">Send <i class="fa fa-paper-plane-o ml-1"></i></button>
-        </div>
-      </form>
-      <!-- Form contact -->
-    </div>
-    <!--Grid column-->
-        <div class="col-lg-2 col-md-12">
-
-
-
-        </div>
-        <!--Grid column-->
-
-        <!--Grid column-->
-        <div class="col-lg-5 col-md-12">
-
-          <!--Google map-->
-          <!-- <div id="map-container" class="z-depth-1-half map-container mb-5" style="height: 400px"></div> -->
-          <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d59614.138624759544!2d105.74406439994821!3d20.95718654436127!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3135ade1a3c1bb5d%3A0x5672057fb1892ed3!2zSOG7jWMgVmnhu4duIEPDtG5nIG5naOG7hyBCxrB1IENow61uaCBWaeG7hW4gVGjDtG5nIEjDoCBO4buZaQ!5e0!3m2!1svi!2s!4v1624217800967!5m2!1svi!2s" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
-          <!--Grid row-->
-          <div class="row text-center">
-
-              <!--Grid column-->
-              <div class="col-lg-4 col-md-12 mb-3">
-
-                  <p><i class="fa fa-map fa-1x mr-2 grey-text"></i>P. Mộ Lao, Hà Đông, Hà Nội, Việt Nam</p>
-
+                  <div class="col-lg-3 col-md-12"></div>
               </div>
-              <!--Grid column-->
-
-              <!--Grid column-->
-              <div class="col-lg-4 col-md-6 mb-3">
-
-                  <p><i class="fa fa-building fa-1x mr-2 grey-text"></i>Luôn mở cửa</p>
-
-              </div>
-              <!--Grid column-->
-
-              <!--Grid column-->
-              <div class="col-lg-4 col-md-6 mb-3">
-
-                  <p><i class="fa fa-phone fa-1x mr-2 grey-text"></i>036 891 1604</p>
-
-              </div>
-              <!--Grid column-->
-
-          </div>
-          <!--Grid row-->
-          <!--Thông tin thành viên-->
-        </div>
-        <div class="col-lg-3 col-md-12"> </div>
-        <div class="col-lg-3 col-md-12"> </div>
-
-        <!--Grid column-->
-        <div class="col-lg-5 col-md-12"> </div>
-        <div class="col-lg-6 col-md-12">
-		</div>
-        <div class="col-lg-3 col-md-12"> </div>
-
-<script>
-    var yourName        = document.getElementById("searchInput1");
-    var crushName       = document.getElementById("searchInput2");
-	var searchButton    = document.getElementById("searchButton");
-    var Result          = document.getElementById("Result");
-    var myBar           = document.getElementById("bar");
-    var width = 0;
-    var id;
-    var memberXML = new Document;
-    var memberArray = new Array();
-    var xget = new XMLHttpRequest();
-	xget.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-        memberXML = this.responseXML;
-        memberArray = createMemberArray(memberXML);
-        autocomplete(searchInput1, memberArray);
-        autocomplete(searchInput2, memberArray);
-        }
-    };
-    xget.open("GET", "members.xml", true);
-    xget.send();
-
-    function frame() {
-        if(width >= 1000){
-            hh.innerHTML = 'Xong !';
-            var ratio = parseInt(Math.random()*100);
-            alert("Xác suất để " + yourName.value + " và " + crushName.value +" yêu nhau là " + ratio + "%" );
-            clearInterval(id);
-        } else {
-            width += 3;
-            myBar.style.width = width/10 + '%';
-            myBar.innerHTML = parseInt(width/10) + '%';
-            if(width < 300){
-                hh.innerHTML = 'Đang lấy thông tin';
-            } else if(width < 600){
-                width += 3;
-                hh.innerHTML = 'Đang phân tích dữ liệu';
-            } else if(width < 900){
-                width += 5;
-                hh.innerHTML = 'Đang tính toán';
-            } else{
-                width += 4;
-                hh.innerHTML = 'Đang tải kết quả';
-            }
-        }
-    }
-
-    function autocomplete(inp, arr) {
-        var currentFocus;
-        inp.addEventListener("input", function(e) {
-            var a, b, i, val = this.value;
-            closeAllLists();
-            if (!val) { return false;}
-            currentFocus = -1;
-            a = document.createElement("DIV");
-            a.setAttribute("id", this.id + "autocomplete-list");
-            a.setAttribute("class", "autocomplete-items");
-            this.parentNode.appendChild(a);
-            for (i = 0; i < arr.length; i++) {
-                if (normalizeString(arr[i]).includes(normalizeString(val))) {
-                    var index = normalizeString(arr[i]).indexOf(normalizeString(val));
-                    b = document.createElement("DIV");
-                    b.innerHTML = arr[i].substr(0, index);
-                    b.innerHTML += "<strong>" + arr[i].substr(index, val.length) + "</strong>";
-                    b.innerHTML += arr[i].substr(index + val.length);
-                    b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
-                    b.addEventListener("click", function(e) {
-                        inp.value = this.getElementsByTagName("input")[0].value;
-                        closeAllLists();
-                        // searchButton.click();
-                    });
-                    a.appendChild(b);
-                }
-            }
-        });
-
-        inp.addEventListener("keydown", function(e) {
-            var x = document.getElementById(this.id + "autocomplete-list");
-            if (x) x = x.getElementsByTagName("div");
-            if (e.keyCode == 40) {
-                currentFocus++;
-                addActive(x);
-            } else if (e.keyCode == 38) { 
-                currentFocus--;
-                addActive(x);
-            } else if (e.keyCode == 13) {
-                e.preventDefault();
-                if (currentFocus > -1) {
-                    if (x) x[currentFocus].click();
-                }
-            }
-        });
-
-        function addActive(x) {
-            if (!x) return false;
-            removeActive(x);
-            if (currentFocus >= x.length) currentFocus = 0;
-            if (currentFocus < 0) currentFocus = (x.length - 1);
-            x[currentFocus].classList.add("autocomplete-active");
-        }
-
-        function removeActive(x) {
-            for (var i = 0; i < x.length; i++) {
-                x[i].classList.remove("autocomplete-active");
-            }
-        }
-
-        function closeAllLists(elmnt) {
-            var x = document.getElementsByClassName("autocomplete-items");
-            for (var i = 0; i < x.length; i++) {
-                if (elmnt != x[i] && elmnt != inp) {
-                    x[i].parentNode.removeChild(x[i]);
-                }
-            }
-        }
-        
-        document.addEventListener("click", function (e) {
-        closeAllLists(e.target);
-    });
-  }
-
-    function normalizeString(str) {
-        return nonAccentVietnamese(str).toUpperCase();
-    }
-
-    function nonAccentVietnamese(str) {
-        str = str.toLowerCase();
-        //     We can also use this instead of from line 11 to line 17
-        //     str = str.replace(/\u00E0|\u00E1|\u1EA1|\u1EA3|\u00E3|\u00E2|\u1EA7|\u1EA5|\u1EAD|\u1EA9|\u1EAB|\u0103|\u1EB1|\u1EAF|\u1EB7|\u1EB3|\u1EB5/g, "a");
-        //     str = str.replace(/\u00E8|\u00E9|\u1EB9|\u1EBB|\u1EBD|\u00EA|\u1EC1|\u1EBF|\u1EC7|\u1EC3|\u1EC5/g, "e");
-        //     str = str.replace(/\u00EC|\u00ED|\u1ECB|\u1EC9|\u0129/g, "i");
-        //     str = str.replace(/\u00F2|\u00F3|\u1ECD|\u1ECF|\u00F5|\u00F4|\u1ED3|\u1ED1|\u1ED9|\u1ED5|\u1ED7|\u01A1|\u1EDD|\u1EDB|\u1EE3|\u1EDF|\u1EE1/g, "o");
-        //     str = str.replace(/\u00F9|\u00FA|\u1EE5|\u1EE7|\u0169|\u01B0|\u1EEB|\u1EE9|\u1EF1|\u1EED|\u1EEF/g, "u");
-        //     str = str.replace(/\u1EF3|\u00FD|\u1EF5|\u1EF7|\u1EF9/g, "y");
-        //     str = str.replace(/\u0111/g, "d");
-        str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
-        str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
-        str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
-        str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
-        str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
-        str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
-        str = str.replace(/đ/g, "d");
-        // Some system encode vietnamese combining accent as individual utf-8 characters
-        str = str.replace(/\u0300|\u0301|\u0303|\u0309|\u0323/g, ""); // Huyền sắc hỏi ngã nặng 
-        str = str.replace(/\u02C6|\u0306|\u031B/g, ""); // Â, Ê, Ă, Ơ, Ư
-        return str;
-    }
-
-    function createMemberArray(xmlDoc) {
-        var Table = xmlDoc.getElementsByTagName("Table")[0];
-        var arrayResult = [];
-        for (let i = 1; i < Table.getElementsByTagName("Row").length; i++) {
-            var name = getXML(xmlDoc, i, 1, 0);
-            if (name == "") {
-                break;
-            }
-            arrayResult.push(name);
-        }
-        return arrayResult;
-    }
-
-	function getPassword(xmlDoc) {
-		var Table = xmlDoc.getElementsByTagName("DocumentProperties")[0];
-		var Data  = Table.getElementsByTagName("Password")[0];
-		var res = Data.childNodes[0];
-		return res.nodeValue;
-	}
-
-	function getXML(xmlDoc, x, y, z) {
-		var Table = xmlDoc.getElementsByTagName("Table")[0];
-		var Row  = Table.getElementsByTagName("Row")[x];
-		if (Row.getElementsByTagName("Cell").length < 2 ) {
-			return "";
-		}
-		var Cell = Row.getElementsByTagName("Cell")[y];
-		var Data = Cell.getElementsByTagName("Data")[z];
-		var res = Data.childNodes[0];
-		return res.nodeValue;
-	}
-
-    function strCaseCmp(a, b) {
-        return typeof a === 'string' && typeof b === 'string'
-            ? a.localeCompare(b, undefined, { sensitivity: 'accent' }) === 0
-            : a === b;
-    }
-
-    searchButton.addEventListener("click", function (event) {
-        if (yourName.value == "" || crushName.value == "") {
-            document.getElementById("hh").innerHTML = "Vui lòng nhập đầy đủ họ tên";
-        } else {
-            var isInMember = false
-            for (i = 0; i < memberArray.length; i++) {
-                if (normalizeString(memberArray[i]).includes(normalizeString(crushName.value))) {
-                    isInMember = true;
-                }
-            }
-            if (isInMember == false) {
-                Result.innerHTML = "<strong>Bạn yêu ngoài CLB à ?</strong>";
-            } else {
-                Result.innerHTML = "";
-            }
-            clearInterval(id);
-            width = 0;
-            id = setInterval(frame , 50);
-        }
-	});
-		
-	// searchInput1.addEventListener("keyup", function (event) {
-	// 	if (event.keyCode === 13) {
-	// 		event.preventDefault();
-	// 		searchButton.click();
-	// 	}
-	// });
-
-</script>
-<!--Thông tin thành viên-->
-</div>
-        <!--Grid row-->
-
-    </section>
-    <!--Section: Contact-->
-          <!--Section: Contact-->
+          </section>
 
       </div>
   </main>
   <!--Main layout-->
-  <!--Main layout-->
 
   <my-footer></my-footer>
-    <!-- JQuery -->
-    <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
-    <!-- Bootstrap tooltips -->
-    <script type="text/javascript" src="js/popper.min.js"></script>
-    <!-- Bootstrap core JavaScript -->
-    <script type="text/javascript" src="js/bootstrap.min.js"></script>
-    <!-- MDB core JavaScript -->
-    <script type="text/javascript" src="js/mdb.min.js"></script>
-    <script src="js/modules/header.js" defer></script>
-    <script src="js/modules/footer.js" defer></script>
-    <!-- <script src="https://maps.google.com/maps/api/js"></script> -->
-    <script>
-    $('.carousel').carousel({
-        interval: 2000,
-    })
-</script>
-<!-- Google Maps settings -->
-<script>
-  // Regular map
-  function regular_map() {
-      var var_location = new google.maps.LatLng(36.870806, 10.197207);
 
-      var var_mapoptions = {
-          center: var_location,
-          zoom: 14
-      };
+  <!-- SCRIPTS -->
+  <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+  <script type="text/javascript" src="js/popper.min.js"></script>
+  <script type="text/javascript" src="js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="js/mdb.min.js"></script>
+  <script src="js/modules/header.js" defer></script>
+  <script src="js/modules/footer.js" defer></script>
 
-      var var_map = new google.maps.Map(document.getElementById("map-container"),
-          var_mapoptions);
+  <script>
+  // ===== Config =====
+  const SHEET_ID = '1wZEUSJfXwrnG-fyONaRb6Izmm9oWU3xTS5xZt_9bqnY';
+  const SHEET_GID = '2030852021';
+  const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${SHEET_GID}`;
+  const COL_HO_TEN = 2; // Column C: Họ và tên
 
-      var var_marker = new google.maps.Marker({
-          position: var_location,
-          map: var_map,
-          title: "Tunisia"
-      });
+  // ===== State =====
+  let memberArray = [];
+  let jsonpTimeout = null;
+
+  // ===== DOM refs =====
+  const $loading = $('#loading');
+  const $errorBox = $('#errorBox');
+  const $statusBar = $('#statusBar');
+  const $reloadBtn = $('#reloadBtn');
+
+  // ===== Helpers =====
+  function getCellValue(row, idx) {
+    const cell = row.c && row.c[idx];
+    if (!cell) return '';
+    return cell.v == null ? '' : String(cell.v);
   }
 
-  // Initialize maps
-//   google.maps.event.addDomListener(window, 'load', regular_map);
-</script>
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&')
+      .replace(/</g, '<')
+      .replace(/>/g, '>')
+      .replace(/"/g, '"')
+      .replace(/'/g, '&#039;');
+  }
+
+  function nonAccentVietnamese(str) {
+    str = (str || '').toLowerCase();
+    str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+    str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+    str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+    str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+    str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+    str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+    str = str.replace(/đ/g, "d");
+    str = str.replace(/\u0300|\u0301|\u0303|\u0309|\u0323/g, "");
+    str = str.replace(/\u02C6|\u0306|\u031B/g, "");
+    return str;
+  }
+
+  function normalizeString(str) {
+    return nonAccentVietnamese(str).toUpperCase();
+  }
+
+  // ===== Data loading (JSONP to bypass CORS) =====
+  function loadData() {
+    $loading.show();
+    $errorBox.hide();
+    $statusBar.hide();
+
+    const callbackName = 'ghepdoiCallback_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+
+    window[callbackName] = function (data) {
+      clearTimeout(jsonpTimeout);
+      try { delete window[callbackName]; } catch (e) { window[callbackName] = undefined; }
+      const scriptEl = document.getElementById('sheet-jsonp-script');
+      if (scriptEl && scriptEl.parentNode) scriptEl.parentNode.removeChild(scriptEl);
+
+      try {
+        if (!data || data.status !== 'ok' || !data.table) {
+          throw new Error('Sheet trả về trạng thái: ' + (data && data.status ? data.status : 'unknown'));
+        }
+
+        memberArray = (data.table.rows || [])
+          .map(row => getCellValue(row, COL_HO_TEN).trim())
+          .filter(name => name !== '');
+
+        $loading.hide();
+        $statusBar.html(
+          `<i class="fa fa-database"></i> Đã tải <strong>${memberArray.length}</strong> thành viên. ` +
+          `Bắt đầu nhập tên để ghép đôi.`
+        ).show();
+      } catch (err) {
+        $loading.hide();
+        $errorBox.html(
+          '<i class="fa fa-exclamation-triangle"></i> ' +
+          'Không xử lý được dữ liệu: ' + escapeHtml(err.message)
+        ).show();
+      }
+    };
+
+    jsonpTimeout = setTimeout(() => {
+      if (window[callbackName]) {
+        try { delete window[callbackName]; } catch (e) { window[callbackName] = undefined; }
+        const scriptEl = document.getElementById('sheet-jsonp-script');
+        if (scriptEl && scriptEl.parentNode) scriptEl.parentNode.removeChild(scriptEl);
+        $loading.hide();
+        $errorBox.html(
+          '<i class="fa fa-exclamation-triangle"></i> ' +
+          'Quá thời gian chờ phản hồi từ Google Sheets (15s).<br>' +
+          '<small>Kiểm tra kết nối mạng hoặc thử lại sau.</small>'
+        ).show();
+      }
+    }, 15000);
+
+    const script = document.createElement('script');
+    script.id = 'sheet-jsonp-script';
+    script.src = `${SHEET_URL}&tqx=out:json;responseHandler:${callbackName}`;
+    script.onerror = function () {
+      clearTimeout(jsonpTimeout);
+      try { delete window[callbackName]; } catch (e) { window[callbackName] = undefined; }
+      $loading.hide();
+      $errorBox.html(
+        '<i class="fa fa-exclamation-triangle"></i> ' +
+        'Không tải được dữ liệu từ Google Sheets.<br>' +
+        '<small>Có thể sheet đã bị chuyển sang riêng tư, hoặc URL không đúng.</small>'
+      ).show();
+    };
+    document.body.appendChild(script);
+  }
+
+  // ===== Autocomplete =====
+  function autocomplete(inp, arr) {
+    let currentFocus;
+    inp.addEventListener("input", function (e) {
+      const a = document.getElementById(this.id + "autocomplete-list");
+      if (a) a.parentNode.removeChild(a);
+      const val = this.value;
+      if (!val) return false;
+      currentFocus = -1;
+      const list = document.createElement("DIV");
+      list.setAttribute("id", this.id + "autocomplete-list");
+      list.setAttribute("class", "autocomplete-items");
+      this.parentNode.appendChild(list);
+      for (let i = 0; i < arr.length; i++) {
+        if (normalizeString(arr[i]).includes(normalizeString(val))) {
+          const idx = normalizeString(arr[i]).indexOf(normalizeString(val));
+          const item = document.createElement("DIV");
+          item.innerHTML = escapeHtml(arr[i].substr(0, idx));
+          item.innerHTML += "<strong>" + escapeHtml(arr[i].substr(idx, val.length)) + "</strong>";
+          item.innerHTML += escapeHtml(arr[i].substr(idx + val.length));
+          item.innerHTML += "<input type='hidden' value='" + escapeHtml(arr[i]) + "'>";
+          item.addEventListener("click", function (e) {
+            inp.value = this.getElementsByTagName("input")[0].value;
+            const a = document.getElementById(inp.id + "autocomplete-list");
+            if (a) a.parentNode.removeChild(a);
+          });
+          list.appendChild(item);
+        }
+      }
+    });
+
+    inp.addEventListener("keydown", function (e) {
+      let x = document.getElementById(this.id + "autocomplete-list");
+      if (x) x = x.getElementsByTagName("div");
+      if (e.keyCode == 40) { // down
+        currentFocus++;
+        addActive(x);
+      } else if (e.keyCode == 38) { // up
+        currentFocus--;
+        addActive(x);
+      } else if (e.keyCode == 13) { // enter
+        e.preventDefault();
+        if (currentFocus > -1 && x) x[currentFocus].click();
+      }
+    });
+
+    function addActive(x) {
+      if (!x) return false;
+      removeActive(x);
+      if (currentFocus >= x.length) currentFocus = 0;
+      if (currentFocus < 0) currentFocus = (x.length - 1);
+      x[currentFocus].classList.add("autocomplete-active");
+    }
+    function removeActive(x) {
+      for (let i = 0; i < x.length; i++) {
+        x[i].classList.remove("autocomplete-active");
+      }
+    }
+
+    document.addEventListener("click", function (e) {
+      const items = document.getElementsByClassName("autocomplete-items");
+      for (let i = 0; i < items.length; i++) {
+        if (e.target != items[i] && e.target != inp) {
+          if (items[i].parentNode) items[i].parentNode.removeChild(items[i]);
+        }
+      }
+    });
+  }
+
+  // ===== Pairing calculation =====
+  let width = 0;
+  let id = null;
+
+  function frame() {
+    const hh = document.getElementById("hh");
+    const bar = document.getElementById("bar");
+    if (width >= 1000) {
+      hh.innerHTML = 'Xong!';
+      const ratio = parseInt(Math.random() * 100);
+      const yourName = document.getElementById("searchInput1").value;
+      const crushName = document.getElementById("searchInput2").value;
+      document.getElementById("Result").innerHTML =
+        `<div class="ratio-display">${ratio}%</div>` +
+        `<p>Xác suất để <strong>${escapeHtml(yourName)}</strong> và <strong>${escapeHtml(crushName)}</strong> hợp nhau là <strong>${ratio}%</strong></p>`;
+      clearInterval(id);
+    } else {
+      width += 3;
+      bar.style.width = (width / 10) + '%';
+      bar.innerHTML = parseInt(width / 10) + '%';
+      if (width < 300) {
+        hh.innerHTML = 'Đang lấy thông tin';
+      } else if (width < 600) {
+        width += 3;
+        hh.innerHTML = 'Đang phân tích dữ liệu';
+      } else if (width < 900) {
+        width += 5;
+        hh.innerHTML = 'Đang tính toán';
+      } else {
+        width += 4;
+        hh.innerHTML = 'Đang tải kết quả';
+      }
+    }
+  }
+
+  // ===== Events =====
+  document.getElementById("searchButton").addEventListener("click", function () {
+    const yourName = document.getElementById("searchInput1").value;
+    const crushName = document.getElementById("searchInput2").value;
+    const Result = document.getElementById("Result");
+
+    if (!yourName || !crushName) {
+      document.getElementById("hh").innerHTML = "Vui lòng nhập đầy đủ họ tên";
+      return;
+    }
+
+    if (memberArray.length === 0) {
+      Result.innerHTML = '<div class="alert alert-warning">Dữ liệu chưa sẵn sàng, vui lòng đợi.</div>';
+      return;
+    }
+
+    // Check if crush is in member list
+    const isInMember = memberArray.some(name =>
+      normalizeString(name).includes(normalizeString(crushName))
+    );
+
+    if (!isInMember) {
+      Result.innerHTML = '<div class="alert alert-info"><strong>Bạn yêu ngoài CLB à?</strong></div>';
+      return;
+    }
+
+    Result.innerHTML = '';
+    clearInterval(id);
+    width = 0;
+    id = setInterval(frame, 50);
+  });
+
+  $reloadBtn.on('click', loadData);
+
+  // ===== Init =====
+  $(document).ready(function () {
+    loadData();
+    autocomplete(document.getElementById("searchInput1"), memberArray);
+    autocomplete(document.getElementById("searchInput2"), memberArray);
+  });
+  </script>
+
 </body>
 
 </html>
