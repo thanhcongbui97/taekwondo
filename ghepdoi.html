@@ -301,7 +301,8 @@
   }
 
   // ===== Autocomplete =====
-  function autocomplete(inp, arr) {
+  // Reads from global `memberArray` (populated async by JSONP).
+  function autocomplete(inp) {
     let currentFocus;
     inp.addEventListener("input", function (e) {
       const a = document.getElementById(this.id + "autocomplete-list");
@@ -313,14 +314,15 @@
       list.setAttribute("id", this.id + "autocomplete-list");
       list.setAttribute("class", "autocomplete-items");
       this.parentNode.appendChild(list);
-      for (let i = 0; i < arr.length; i++) {
-        if (normalizeString(arr[i]).includes(normalizeString(val))) {
-          const idx = normalizeString(arr[i]).indexOf(normalizeString(val));
+      // Read from global memberArray (always up-to-date)
+      for (let i = 0; i < memberArray.length; i++) {
+        if (normalizeString(memberArray[i]).includes(normalizeString(val))) {
+          const idx = normalizeString(memberArray[i]).indexOf(normalizeString(val));
           const item = document.createElement("DIV");
-          item.innerHTML = escapeHtml(arr[i].substr(0, idx));
-          item.innerHTML += "<strong>" + escapeHtml(arr[i].substr(idx, val.length)) + "</strong>";
-          item.innerHTML += escapeHtml(arr[i].substr(idx + val.length));
-          item.innerHTML += "<input type='hidden' value='" + escapeHtml(arr[i]) + "'>";
+          item.innerHTML = escapeHtml(memberArray[i].substr(0, idx));
+          item.innerHTML += "<strong>" + escapeHtml(memberArray[i].substr(idx, val.length)) + "</strong>";
+          item.innerHTML += escapeHtml(memberArray[i].substr(idx + val.length));
+          item.innerHTML += "<input type='hidden' value='" + escapeHtml(memberArray[i]) + "'>";
           item.addEventListener("click", function (e) {
             inp.value = this.getElementsByTagName("input")[0].value;
             const a = document.getElementById(inp.id + "autocomplete-list");
@@ -441,8 +443,8 @@
   // ===== Init =====
   $(document).ready(function () {
     loadData();
-    autocomplete(document.getElementById("searchInput1"), memberArray);
-    autocomplete(document.getElementById("searchInput2"), memberArray);
+    autocomplete(document.getElementById("searchInput1"));
+    autocomplete(document.getElementById("searchInput2"));
   });
   </script>
 
