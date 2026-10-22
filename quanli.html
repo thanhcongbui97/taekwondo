@@ -306,10 +306,11 @@
   // Parse rank text like "Cấp 10", "4 đẳng", "3 d?ng" and return belt info.
   function parseRank(rankText) {
     if (!rankText) return null;
-    const text = rankText.toLowerCase();
+    // Strip diacritics for robust matching (handles mojibake too)
+    const text = nonAccentVietnamese(rankText.toLowerCase());
 
     // Geup (cấp): cap 10 -> white, cap 1 -> red 4 stripes
-    let m = text.match(/(?:cấp|cap|c\u1ea5p|c\u00e2\u0323p)\s*(\d+)/);
+    let m = text.match(/(?:cap|cap)\s*(\d+)/);
     if (m) {
       const cap = parseInt(m[1], 10);
       const geupBelts = {
@@ -329,16 +330,31 @@
       }
     }
 
-    // Dan (đẳng): dang 1 -> black, dang 2 -> black 1 stripe, ...
-    m = text.match(/(\d+)\s*(?:đẳng|dang|d\u1eb3ng)/);
+    // Dan (đẳng): dang 1 -> black 1 stripe, dang 2 -> black 2 stripes, ...
+    m = text.match(/(\d+)\s*(?:dang|dang)/);
     if (m) {
       const dang = parseInt(m[1], 10);
       if (dang >= 1) {
-        return { color: 'black', stripes: dang - 1, label: 'Đẳng ' + dang };
+        return { color: 'black', stripes: dang, label: 'Đẳng ' + dang };
       }
     }
 
     return null;
+  }
+
+  // Strip Vietnamese diacritics (for robust matching)
+  function nonAccentVietnamese(str) {
+    str = (str || '').toLowerCase();
+    str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+    str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+    str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+    str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+    str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+    str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+    str = str.replace(/đ/g, "d");
+    str = str.replace(/\u0300|\u0301|\u0303|\u0309|\u0323/g, "");
+    str = str.replace(/\u02C6|\u0306|\u031B/g, "");
+    return str;
   }
 
   function renderBelt(rankText) {
@@ -507,7 +523,7 @@
               <h5 class="card-title mb-1">
                 <i class="fas fa-user"></i> ${escapeHtml(hoTen) || '(chưa có tên)'}
               </h5>
-              ${capDai ? `<span class="rank-badge mb-2 d-inline-block">${escapeHtml(capDai)}</span>` : ''}
+              ${capDai ? renderBelt(capDai) : ''}
               <hr class="my-2">
               ${maHV ? `<div class="field"><i class="fas fa-id-badge"></i><strong>Mã HV:</strong> ${escapeHtml(maHV)}</div>` : ''}
               ${ngaySinh ? `<div class="field"><i class="fas fa-birthday-cake"></i><strong>Ngày sinh:</strong> ${escapeHtml(ngaySinh)}</div>` : ''}
