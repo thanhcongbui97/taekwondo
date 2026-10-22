@@ -273,6 +273,11 @@
   const SHEET3_GID = '276603415';
   const SHEET3_URL = `https://docs.google.com/spreadsheets/d/${SHEET3_ID}/gviz/tq?gid=${SHEET3_GID}`;
 
+  // Third registration sheet (GEN16 form - has header row)
+  const SHEET4_ID = '1krt-rNr62gSEJNNMYjpMLWrknW4MDCaY6kipXEXFEn4';
+  const SHEET4_GID = '2094747340';
+  const SHEET4_URL = `https://docs.google.com/spreadsheets/d/${SHEET4_ID}/gviz/tq?gid=${SHEET4_GID}`;
+
   // Column index map (0-based, matches the order in the sheet)
   const COL = {
     STT: 0,
@@ -342,6 +347,24 @@
     MONG_MUON: 12,
     VAO_MES: 13,
     NOTE: 14
+  };
+
+  // Third registration sheet column indices (GEN16 form - has header row)
+  const SHEET4_COL = {
+    TIMESTAMP: 0,
+    HO_TEN: 2,
+    NGAY_SINH: 3,
+    SDT: 4,
+    EMAIL: 5,
+    FACEBOOK: 6,
+    TRUONG: 7,
+    MA_SV: 8,
+    NGUON_BIET: 9,
+    DA_HOC: 10,
+    CHUNG_NHAN: 11,
+    SIZE_VO: 12,
+    MONG_MUON: 13,
+    NOTE: 22
   };
 
   // ===== State =====
@@ -641,6 +664,14 @@
         mergeRegistrationMaps(registrationMap, map3);
       } catch (regErr) {
         console.warn('Registration sheet 2 unavailable:', regErr);
+      }
+      try {
+        const regData4 = await jsonpLoad(SHEET4_URL);
+        const map4 = buildRegistrationMap(regData4, SHEET4_COL);
+        regCount += map4.size;
+        mergeRegistrationMaps(registrationMap, map4);
+      } catch (regErr) {
+        console.warn('Registration sheet 3 (GEN16) unavailable:', regErr);
       }
 
       // Load exam result sheets (Q3 first for priority, Q2 as fallback)
