@@ -65,7 +65,8 @@ text{
 }
 .member-card .bcn-tag {
     font-size: 0.75rem;
-    font-weight: normal;
+    font-weight: bold;
+    text-transform: uppercase;
     padding: 4px 10px;
     background-color: #1a1a1a;
     color: #ffd700;
