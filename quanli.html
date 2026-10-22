@@ -1010,7 +1010,7 @@
     if (bcnEntries.length > 0) {
       const tags = bcnEntries.map(e => {
         const label = e.term ? `${e.position} ${e.term}` : e.position;
-        return `<span class="badge badge-info bcn-tag"><i class="fas fa-user-tie"></i> ${escapeHtml(label)}</span>`;
+        return `<span class="badge bcn-tag"><i class="fas fa-user-tie"></i> ${escapeHtml(label)}</span>`;
       }).join(' ');
       bcnTagsHtml = `<div class="bcn-tags">${tags}</div>`;
     }
