@@ -210,9 +210,6 @@
                           <button class="btn btn-outline-success" id="exportBtn" type="button" title="Ghi toàn bộ hội viên và hồ sơ đăng ký vào Google Sheet (ghi đè)">
                               <i class="fa fa-file-export ml-1"></i> Ghi vào Sheet
                           </button>
-                          <button class="btn btn-outline-warning" id="closeFundBtn" type="button" title="Đóng quỹ tháng hiện tại - ghi vào tab dongquy">
-                              <i class="fa fa-coins ml-1"></i> Đóng quỹ tháng
-                          </button>
                       </div>
                       <div class="text-center mt-4">
                           <small class="text-muted">Tìm kiếm theo tên và/hoặc năm sinh. Không phân biệt hoa/thường, không cần nhập đầy đủ tên.</small>
@@ -472,7 +469,6 @@
     const $reloadBtn = $('#reloadBtn');
     const $collapseBtn = $('#collapseBtn');
     const $exportBtn = $('#exportBtn');
-    const $closeFundBtn = $('#closeFundBtn');
     const $loading = $('#loading');
     const $loadingBar = $('#loadingBar');
     const $loadingPercent = $('#loadingPercent');
@@ -1147,6 +1143,13 @@
                     data-cap-dai="${escapeHtml(updatedCapDai || capDai || '')}">
               <i class="fa fa-calendar-check"></i> Điểm danh hôm nay
             </button>
+            <button class="btn btn-sm btn-warning close-fund-btn mt-1 w-100"
+                    data-ho-ten="${escapeHtml(hoTen)}"
+                    data-ma-hv="${escapeHtml(maHV)}"
+                    data-ngay-sinh="${escapeHtml(ngaySinh)}"
+                    data-cap-dai="${escapeHtml(updatedCapDai || capDai || '')}">
+              <i class="fa fa-coins"></i> Đóng quỹ tháng này
+            </button>
           </div>
         </div>
       </div>
@@ -1173,6 +1176,13 @@
                     data-ngay-sinh="${escapeHtml(reg.dob || '')}"
                     data-cap-dai="">
               <i class="fa fa-calendar-check"></i> Điểm danh hôm nay
+            </button>
+            <button class="btn btn-sm btn-warning close-fund-btn mt-1 w-100"
+                    data-ho-ten="${escapeHtml(reg.name)}"
+                    data-ma-hv=""
+                    data-ngay-sinh="${escapeHtml(reg.dob || '')}"
+                    data-cap-dai="">
+              <i class="fa fa-coins"></i> Đóng quỹ tháng này
             </button>
           </div>
         </div>
@@ -1443,33 +1453,36 @@
 
   $exportBtn.on('click', exportToSheet);
 
-  // ===== Close monthly fund (đóng quỹ tháng) =====
-  // Writes one row to the "dongquy" tab marking the current month as closed.
-  async function closeFund() {
+  // ===== Close monthly fund per member (đóng quỹ tháng cho từng người) =====
+  // Click handler for the "Đóng quỹ tháng này" button inside each member card.
+  // Writes one row to the "dongquy" tab for that specific person.
+  // Duplicate check: same THANG + same person (by MA_HV or HO_TEN).
+  async function closeFundForMember($btn) {
     if (!EXPORT_SCRIPT_URL) {
       alert('Chưa cấu hình EXPORT_SCRIPT_URL. Xem hướng dẫn trong nút "Ghi vào Sheet".');
       return;
     }
-    if (isLoading) {
-      alert('Dữ liệu đang được tải, vui lòng đợi.');
+
+    const hoTen    = $btn.data('ho-ten') || '';
+    const maHV     = $btn.data('ma-hv') || '';
+    const ngaySinh = $btn.data('ngay-sinh') || '';
+    const capDai   = $btn.data('cap-dai') || '';
+
+    if (!hoTen) {
+      alert('Không có tên hội viên, không thể đóng quỹ.');
       return;
     }
 
     const now = new Date();
+    const dateStr = now.toLocaleDateString('vi-VN');
     const thang = String(now.getMonth() + 1).padStart(2, '0') + '/' + now.getFullYear();
-    const soHV = allRows.length;
 
-    if (!confirm(`Đóng quỹ tháng ${thang}?\n\n` +
-                 `Sẽ ghi 1 dòng vào tab "dongquy" với:\n` +
-                 `• Tháng: ${thang}\n` +
-                 `• Số hội viên hiện tại: ${soHV}\n` +
-                 `• Thời gian: ${now.toLocaleString('vi-VN')}\n\n` +
-                 `Tiếp tục?`)) {
+    if (!confirm(`Đóng quỹ tháng ${thang} cho ${hoTen}?`)) {
       return;
     }
 
-    $closeFundBtn.prop('disabled', true)
-      .html('<i class="fa fa-spinner fa-spin ml-1"></i> Đang ghi...');
+    $btn.prop('disabled', true)
+      .html('<i class="fa fa-spinner fa-spin"></i> Đang ghi...');
 
     try {
       const response = await fetch(EXPORT_SCRIPT_URL, {
@@ -1477,10 +1490,12 @@
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({
           action: 'closeFund',
-          thang: thang,
+          date: dateStr,
           timestamp: now.toISOString(),
-          soHV: soHV,
-          ghiChu: ''
+          maHV: maHV,
+          hoTen: hoTen,
+          ngaySinh: ngaySinh,
+          capDai: capDai
         }),
         redirect: 'follow'
       });
@@ -1493,27 +1508,27 @@
       }
 
       if (result && result.success) {
-        $closeFundBtn.removeClass('btn-outline-warning').addClass('btn-outline-success')
-          .html('<i class="fa fa-check ml-1"></i> Đã đóng quỹ ' + thang);
-        alert(`Đã đóng quỹ tháng ${thang} thành công!\n\n` +
-              `Tab: dongquy (dòng ${result.rowNumber})\n\n` +
-              `Sheet: https://docs.google.com/spreadsheets/d/${EXPORT_SHEET_ID}`);
+        $btn.removeClass('btn-warning').addClass('btn-outline-success')
+          .html('<i class="fa fa-check"></i> Đã đóng quỹ ' + thang);
       } else if (result && result.duplicate) {
-        $closeFundBtn.removeClass('btn-outline-warning').addClass('btn-outline-secondary')
-          .html('<i class="fa fa-check ml-1"></i> Đã đóng quỹ ' + thang);
-        alert(result.error || `Quỹ tháng ${thang} đã được đóng rồi.`);
+        $btn.removeClass('btn-warning').addClass('btn-outline-secondary')
+          .html('<i class="fa fa-check"></i> Đã đóng quỹ ' + thang);
+        alert(result.error || `${hoTen} đã đóng quỹ tháng ${thang} rồi.`);
       } else {
         throw new Error((result && result.error) || 'Lỗi không xác định');
       }
     } catch (err) {
       alert('Lỗi khi đóng quỹ: ' + err.message);
-      $closeFundBtn.prop('disabled', false)
-        .html('<i class="fa fa-coins ml-1"></i> Đóng quỹ tháng');
+      $btn.prop('disabled', false)
+        .html('<i class="fa fa-coins"></i> Đóng quỹ tháng này');
       console.error('Close fund error:', err);
     }
   }
 
-  $closeFundBtn.on('click', closeFund);
+  // Event delegation for close-fund buttons
+  $results.on('click', '.close-fund-btn', function () {
+    closeFundForMember($(this));
+  });
 
   // ===== Attendance (điểm danh) =====
   // Click handler for the "Điểm danh hôm nay" button inside each member card.

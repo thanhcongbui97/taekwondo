@@ -37,7 +37,7 @@ const ATTENDANCE_TAB_GID = 1395531960; // fallback if name lookup fails
 const ATTENDANCE_HEADERS = ['NGAY', 'TIMESTAMP', 'MA_HV', 'HO_TEN', 'NGAY_SINH', 'CAP_DAI', 'GHI_CHU'];
 const FUND_TAB_NAME = 'dongquy';
 const FUND_TAB_GID = 803125790; // fallback if name lookup fails
-const FUND_HEADERS = ['THANG', 'TIMESTAMP', 'SO_HV', 'GHI_CHU'];
+const FUND_HEADERS = ['NGAY', 'TIMESTAMP', 'MA_HV', 'HO_TEN', 'NGAY_SINH', 'CAP_DAI', 'GHI_CHU'];
 
 /**
  * Handle POST requests from the frontend.
@@ -241,7 +241,8 @@ function handleAttendance(data) {
 
 /**
  * ACTION: closeFund
- * Appends one row to the "dongquy" tab marking the current month as closed.
+ * Appends one row to the "dongquy" tab for a specific member.
+ * Duplicate check: same THANG (extracted from NGAY) + same person (by MA_HV or HO_TEN).
  * Creates the tab + header if missing.
  */
 function handleCloseFund(data) {
@@ -272,30 +273,47 @@ function handleCloseFund(data) {
     sheet.setFrozenRows(1);
   }
 
-  // Build fund row
   const now = new Date();
-  const thang = data.thang || Utilities.formatDate(now, Session.getScriptTimeZone(), 'MM/yyyy');
+  const ngay = data.date || Utilities.formatDate(now, Session.getScriptTimeZone(), 'dd/MM/yyyy');
+  const maHV = (data.maHV || '').trim();
+  const hoTen = (data.hoTen || '').trim();
 
-  // Duplicate check: same THANG already exists
+  // Extract THANG (MM/yyyy) from NGAY (dd/MM/yyyy) for duplicate check
+  const thang = ngay.length >= 10 ? ngay.substring(3, 10) : '';
+
+  // Duplicate check: same THANG + same person
   const lastRow = sheet.getLastRow();
-  if (lastRow > 1) {
+  if (lastRow > 1 && (maHV || hoTen) && thang) {
     const existing = sheet.getRange(2, 1, lastRow - 1, FUND_HEADERS.length).getValues();
-    const dup = existing.find(r => String(r[0]).trim() === thang);
+    const dup = existing.find(r => {
+      const rowNgay = String(r[0]).trim();
+      const rowThang = rowNgay.length >= 10 ? rowNgay.substring(3, 10) : '';
+      if (rowThang !== thang) return false;
+      // Prefer MA_HV match if both sides have it
+      if (maHV && String(r[2]).trim()) {
+        return String(r[2]).trim() === maHV;
+      }
+      // Fallback to HO_TEN match
+      return String(r[3]).trim() === hoTen;
+    });
     if (dup) {
       return ContentService
         .createTextOutput(JSON.stringify({
           success: false,
           duplicate: true,
-          error: `Quỹ tháng ${thang} đã được đóng rồi.`
+          error: `${hoTen || maHV} đã đóng quỹ tháng ${thang} rồi.`
         }))
         .setMimeType(ContentService.MimeType.JSON);
     }
   }
 
   const row = [
-    thang,
+    ngay,
     data.timestamp || now.toISOString(),
-    data.soHV != null ? data.soHV : '',
+    maHV,
+    hoTen,
+    data.ngaySinh || '',
+    data.capDai || '',
     data.ghiChu || ''
   ];
 
