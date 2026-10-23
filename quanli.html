@@ -1136,6 +1136,13 @@
             ${hieuLuc ? `<div class="field"><i class="fas fa-check-circle"></i><strong>Hiệu lực:</strong> ${escapeHtml(hieuLuc)}</div>` : ''}
             ${regFieldsHtml}
             ${extraFieldsHtml}
+            <button class="btn btn-sm btn-success attendance-btn mt-2 w-100"
+                    data-ho-ten="${escapeHtml(hoTen)}"
+                    data-ma-hv="${escapeHtml(maHV)}"
+                    data-ngay-sinh="${escapeHtml(ngaySinh)}"
+                    data-cap-dai="${escapeHtml(updatedCapDai || capDai || '')}">
+              <i class="fa fa-calendar-check"></i> Điểm danh hôm nay
+            </button>
           </div>
         </div>
       </div>
@@ -1156,6 +1163,13 @@
             <hr class="my-2">
             ${reg.dob ? `<div class="field field-keep"><i class="fas fa-birthday-cake"></i><strong>Ngày sinh:</strong> ${escapeHtml(reg.dob)}</div>` : ''}
             ${regFieldsHtml}
+            <button class="btn btn-sm btn-success attendance-btn mt-2 w-100"
+                    data-ho-ten="${escapeHtml(reg.name)}"
+                    data-ma-hv=""
+                    data-ngay-sinh="${escapeHtml(reg.dob || '')}"
+                    data-cap-dai="">
+              <i class="fa fa-calendar-check"></i> Điểm danh hôm nay
+            </button>
           </div>
         </div>
       </div>
@@ -1424,6 +1438,77 @@
   }
 
   $exportBtn.on('click', exportToSheet);
+
+  // ===== Attendance (điểm danh) =====
+  // Click handler for the "Điểm danh hôm nay" button inside each member card.
+  // Uses event delegation since cards are dynamically rendered.
+  async function markAttendance($btn) {
+    if (!EXPORT_SCRIPT_URL) {
+      alert('Chưa cấu hình EXPORT_SCRIPT_URL. Xem hướng dẫn trong nút "Ghi vào Sheet".');
+      return;
+    }
+
+    const hoTen    = $btn.data('ho-ten') || '';
+    const maHV     = $btn.data('ma-hv') || '';
+    const ngaySinh = $btn.data('ngay-sinh') || '';
+    const capDai   = $btn.data('cap-dai') || '';
+
+    if (!hoTen) {
+      alert('Không có tên hội viên, không thể điểm danh.');
+      return;
+    }
+
+    // Format today's date as dd/mm/yyyy (Vietnamese locale)
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('vi-VN');
+
+    // Disable button + show spinner
+    $btn.prop('disabled', true)
+      .html('<i class="fa fa-spinner fa-spin"></i> Đang ghi...');
+
+    try {
+      const response = await fetch(EXPORT_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'attendance',
+          date: dateStr,
+          timestamp: now.toISOString(),
+          maHV: maHV,
+          hoTen: hoTen,
+          ngaySinh: ngaySinh,
+          capDai: capDai
+        }),
+        redirect: 'follow'
+      });
+
+      let result;
+      try {
+        result = await response.json();
+      } catch (parseErr) {
+        throw new Error('Phản hồi không hợp lệ từ Apps Script.');
+      }
+
+      if (result && result.success) {
+        // Visual feedback: change to "Đã điểm danh" with check icon
+        $btn.removeClass('btn-success').addClass('btn-outline-success')
+          .html('<i class="fa fa-check"></i> Đã điểm danh ' + dateStr);
+      } else {
+        throw new Error((result && result.error) || 'Lỗi không xác định');
+      }
+    } catch (err) {
+      alert('Lỗi khi điểm danh: ' + err.message);
+      // Re-enable button on error
+      $btn.prop('disabled', false)
+        .html('<i class="fa fa-calendar-check"></i> Điểm danh hôm nay');
+      console.error('Attendance error:', err);
+    }
+  }
+
+  // Event delegation: works for cards rendered after page load
+  $results.on('click', '.attendance-btn', function () {
+    markAttendance($(this));
+  });
 
   // ===== Init =====
   // (Auth gate at top of script already redirected if not authed)
