@@ -189,11 +189,39 @@ function handleAttendance(data) {
 
   // Build attendance row
   const now = new Date();
+  const ngay = data.date || Utilities.formatDate(now, Session.getScriptTimeZone(), 'dd/MM/yyyy');
+  const maHV = (data.maHV || '').trim();
+  const hoTen = (data.hoTen || '').trim();
+
+  // Duplicate check: same NGAY + same person (by MA_HV if available, else by HO_TEN)
+  const lastRow = sheet.getLastRow();
+  if (lastRow > 1 && (maHV || hoTen)) {
+    const existing = sheet.getRange(2, 1, lastRow - 1, ATTENDANCE_HEADERS.length).getValues();
+    const dup = existing.find(r => {
+      if (String(r[0]).trim() !== ngay) return false;
+      // Prefer MA_HV match if both sides have it
+      if (maHV && String(r[2]).trim()) {
+        return String(r[2]).trim() === maHV;
+      }
+      // Fallback to HO_TEN match
+      return String(r[3]).trim() === hoTen;
+    });
+    if (dup) {
+      return ContentService
+        .createTextOutput(JSON.stringify({
+          success: false,
+          duplicate: true,
+          error: `${hoTen || maHV} đã được điểm danh ngày ${ngay} rồi.`
+        }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  }
+
   const row = [
-    data.date || Utilities.formatDate(now, Session.getScriptTimeZone(), 'dd/MM/yyyy'),
+    ngay,
     data.timestamp || now.toISOString(),
-    data.maHV || '',
-    data.hoTen || '',
+    maHV,
+    hoTen,
     data.ngaySinh || '',
     data.capDai || '',
     data.ghiChu || ''
@@ -246,8 +274,26 @@ function handleCloseFund(data) {
 
   // Build fund row
   const now = new Date();
+  const thang = data.thang || Utilities.formatDate(now, Session.getScriptTimeZone(), 'MM/yyyy');
+
+  // Duplicate check: same THANG already exists
+  const lastRow = sheet.getLastRow();
+  if (lastRow > 1) {
+    const existing = sheet.getRange(2, 1, lastRow - 1, FUND_HEADERS.length).getValues();
+    const dup = existing.find(r => String(r[0]).trim() === thang);
+    if (dup) {
+      return ContentService
+        .createTextOutput(JSON.stringify({
+          success: false,
+          duplicate: true,
+          error: `Quỹ tháng ${thang} đã được đóng rồi.`
+        }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  }
+
   const row = [
-    data.thang || Utilities.formatDate(now, Session.getScriptTimeZone(), 'MM/yyyy'),
+    thang,
     data.timestamp || now.toISOString(),
     data.soHV != null ? data.soHV : '',
     data.ghiChu || ''

@@ -1498,6 +1498,10 @@
         alert(`Đã đóng quỹ tháng ${thang} thành công!\n\n` +
               `Tab: dongquy (dòng ${result.rowNumber})\n\n` +
               `Sheet: https://docs.google.com/spreadsheets/d/${EXPORT_SHEET_ID}`);
+      } else if (result && result.duplicate) {
+        $closeFundBtn.removeClass('btn-outline-warning').addClass('btn-outline-secondary')
+          .html('<i class="fa fa-check ml-1"></i> Đã đóng quỹ ' + thang);
+        alert(result.error || `Quỹ tháng ${thang} đã được đóng rồi.`);
       } else {
         throw new Error((result && result.error) || 'Lỗi không xác định');
       }
@@ -1565,6 +1569,11 @@
         // Visual feedback: change to "Đã điểm danh" with check icon
         $btn.removeClass('btn-success').addClass('btn-outline-success')
           .html('<i class="fa fa-check"></i> Đã điểm danh ' + dateStr);
+      } else if (result && result.duplicate) {
+        // Already marked attendance today - show as already done
+        $btn.removeClass('btn-success').addClass('btn-outline-secondary')
+          .html('<i class="fa fa-check"></i> Đã điểm danh ' + dateStr);
+        alert(result.error || 'Đã điểm danh rồi.');
       } else {
         throw new Error((result && result.error) || 'Lỗi không xác định');
       }
