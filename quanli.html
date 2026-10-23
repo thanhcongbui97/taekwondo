@@ -281,6 +281,42 @@
     </div>
   </div>
 
+  <!-- Multi-fund modal (đóng quỹ nhiều tháng) -->
+  <div class="modal fade" id="multiFundModal" tabindex="-1" role="dialog" aria-labelledby="multiFundTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="multiFundTitle">Đóng quỹ nhiều tháng cho <span id="multiFundHoTen"></span></h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <button class="btn btn-sm btn-outline-secondary" id="multiFundPrevYear" type="button">
+              <i class="fa fa-chevron-left"></i> Năm trước
+            </button>
+            <h6 class="mb-0 font-weight-bold" id="multiFundYearLabel"></h6>
+            <button class="btn btn-sm btn-outline-secondary" id="multiFundNextYear" type="button">
+              Năm sau <i class="fa fa-chevron-right"></i>
+            </button>
+          </div>
+          <div id="multiFundMonthGrid" class="row"></div>
+          <div class="mt-3 p-2 bg-light rounded">
+            <strong>Đã chọn: <span id="multiFundCount" class="text-primary">0</span> tháng</strong>
+            <div id="multiFundSelectedList" class="mt-1 small text-muted"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+          <button type="button" class="btn btn-warning" id="multiFundSubmit">
+            <i class="fa fa-coins"></i> Đóng quỹ
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- SCRIPTS -->
   <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
   <script type="text/javascript" src="js/popper.min.js"></script>
@@ -509,6 +545,7 @@
   let attendanceTodaySet = new Set();  // normalized names who already attended today
   let attendanceByPersonMap = new Map(); // normalized name -> Set of "dd/mm/yyyy" dates attended
   let fundThisMonthSet = new Set();    // normalized names who already paid fund this month
+  let fundByPersonMap = new Map();     // normalized name -> Set of "MM/yyyy" months paid
 
   // ===== DOM refs =====
   const $searchInput = $('#searchInput');
@@ -1011,13 +1048,20 @@
         const hoTen = String(getCellValue(row, 3) || '').trim();
         if (ngay && hoTen && ngay.length >= 10) {
           const rowThang = ngay.substring(3, 10); // extract MM/yyyy from dd/MM/yyyy
+          const key = normalize(hoTen);
+          // Track all paid months per person (for multi-month selector)
+          if (!fundByPersonMap.has(key)) {
+            fundByPersonMap.set(key, new Set());
+          }
+          fundByPersonMap.get(key).add(rowThang);
+          // Also track this month's payment (for single-month button disable)
           if (rowThang === thang) {
-            fundThisMonthSet.add(normalize(hoTen));
+            fundThisMonthSet.add(key);
           }
         }
       });
       console.log('[loadStatus] fundThisMonthSet size:', fundThisMonthSet.size,
-                  '| sample:', Array.from(fundThisMonthSet).slice(0, 5));
+                  '| fundByPersonMap size:', fundByPersonMap.size);
     } catch (err) {
       console.warn('[loadStatus] Không tải được trạng thái đóng quỹ:', err);
     }
@@ -1272,6 +1316,9 @@
                       <a class="dropdown-item multi-att-link" href="#" data-action="multi-attendance">
                         <i class="fa fa-calendar-plus"></i> Điểm danh nhiều ngày
                       </a>
+                      <a class="dropdown-item multi-fund-link" href="#" data-action="multi-fund">
+                        <i class="fa fa-coins"></i> Đóng quỹ nhiều tháng
+                      </a>
                     </div>
                   </div>
                 </div>
@@ -1341,6 +1388,9 @@
                 <div class="dropdown-menu dropdown-menu-right">
                   <a class="dropdown-item multi-att-link" href="#" data-action="multi-attendance">
                     <i class="fa fa-calendar-plus"></i> Điểm danh nhiều ngày
+                  </a>
+                  <a class="dropdown-item multi-fund-link" href="#" data-action="multi-fund">
+                    <i class="fa fa-coins"></i> Đóng quỹ nhiều tháng
                   </a>
                 </div>
               </div>
@@ -1720,7 +1770,10 @@
 
       if (result && result.success) {
         // Add to set so future card renders know this person already paid
-        fundThisMonthSet.add(normalize(hoTen));
+        const key = normalize(hoTen);
+        fundThisMonthSet.add(key);
+        if (!fundByPersonMap.has(key)) fundByPersonMap.set(key, new Set());
+        fundByPersonMap.get(key).add(thang);
         $btn.removeClass('btn-warning').addClass('btn-success')
           .html('<i class="fa fa-check"></i> Đã đóng quỹ ' + thang);
         if (assumedSuccess) {
@@ -1728,7 +1781,10 @@
         }
       } else if (result && result.duplicate) {
         // Add to set (in case it wasn't there yet)
-        fundThisMonthSet.add(normalize(hoTen));
+        const key = normalize(hoTen);
+        fundThisMonthSet.add(key);
+        if (!fundByPersonMap.has(key)) fundByPersonMap.set(key, new Set());
+        fundByPersonMap.get(key).add(thang);
         $btn.removeClass('btn-warning').addClass('btn-success')
           .html('<i class="fa fa-check"></i> Đã đóng quỹ ' + thang);
         alert(result.error || `${hoTen} đã đóng quỹ tháng ${thang} rồi.`);
@@ -2157,6 +2213,230 @@
   // Event delegation: works for cards rendered after page load
   $results.on('click', '.attendance-btn', function () {
     markAttendance($(this));
+  });
+
+  // ===== Multi-month fund (đóng quỹ nhiều tháng) =====
+  // Opens a modal with a year/month grid. User clicks months to select/deselect,
+  // then submits to write all selected months at once.
+  const multiFundState = {
+    hoTen: '',
+    maHV: '',
+    ngaySinh: '',
+    capDai: '',
+    viewYear: 0,
+    selectedMonths: new Set() // set of "MM/yyyy" strings
+  };
+
+  function renderMultiFundMonthGrid() {
+    const year = multiFundState.viewYear;
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1; // 1-12
+
+    $('#multiFundYearLabel').text('Năm ' + year);
+
+    // Get this person's paid months
+    const personKey = normalize(multiFundState.hoTen);
+    const personPaid = fundByPersonMap.get(personKey) || new Set();
+
+    let html = '';
+    for (let m = 1; m <= 12; m++) {
+      const mm = String(m).padStart(2, '0');
+      const thang = mm + '/' + year;
+      const isSelected = multiFundState.selectedMonths.has(thang);
+      const isPaid = personPaid.has(thang);
+      const isFuture = (year > currentYear) || (year === currentYear && m > currentMonth);
+
+      let cls = 'btn-outline-secondary';
+      let label = 'T' + m;
+      let title = thang;
+      let disabled = '';
+
+      if (isFuture) {
+        cls = 'btn-light text-muted';
+        disabled = 'disabled';
+      } else if (isPaid) {
+        cls = 'btn-success';
+        label = '✓ T' + m;
+        title = thang + ' (đã đóng)';
+        disabled = 'disabled';
+      } else if (isSelected) {
+        cls = 'btn-warning';
+      }
+
+      html += '<div class="col-3 mb-2">' +
+              '<button class="btn btn-sm ' + cls + ' w-100 fund-month-btn" ' +
+              'data-thang="' + thang + '" ' + disabled + ' title="' + title + '">' + label + '</button>' +
+              '</div>';
+    }
+    $('#multiFundMonthGrid').html(html);
+  }
+
+  function updateMultiFundCount() {
+    const count = multiFundState.selectedMonths.size;
+    $('#multiFundCount').text(count);
+    if (count > 0) {
+      const sorted = Array.from(multiFundState.selectedMonths).sort();
+      $('#multiFundSelectedList').text(sorted.join(', '));
+    } else {
+      $('#multiFundSelectedList').text('(chưa chọn tháng nào)');
+    }
+  }
+
+  function openMultiFundModal($trigger) {
+    multiFundState.hoTen = $trigger.data('ho-ten') || '';
+    multiFundState.maHV = $trigger.data('ma-hv') || '';
+    multiFundState.ngaySinh = $trigger.data('ngay-sinh') || '';
+    multiFundState.capDai = $trigger.data('cap-dai') || '';
+    multiFundState.selectedMonths = new Set();
+
+    multiFundState.viewYear = new Date().getFullYear();
+
+    $('#multiFundHoTen').text(multiFundState.hoTen);
+    renderMultiFundMonthGrid();
+    updateMultiFundCount();
+    $('#multiFundModal').modal('show');
+  }
+
+  // Event delegation: open modal when clicking dropdown item
+  $results.on('click', '.multi-fund-link', function (e) {
+    e.preventDefault();
+    const $trigger = $(this).closest('.dropdown').find('.multi-att-trigger');
+    openMultiFundModal($trigger);
+  });
+
+  // Month click
+  $('#multiFundMonthGrid').on('click', '.fund-month-btn:not([disabled])', function () {
+    const thang = $(this).data('thang');
+    if (multiFundState.selectedMonths.has(thang)) {
+      multiFundState.selectedMonths.delete(thang);
+    } else {
+      multiFundState.selectedMonths.add(thang);
+    }
+    renderMultiFundMonthGrid();
+    updateMultiFundCount();
+  });
+
+  // Year navigation
+  $('#multiFundPrevYear').on('click', function () {
+    multiFundState.viewYear--;
+    renderMultiFundMonthGrid();
+  });
+  $('#multiFundNextYear').on('click', function () {
+    multiFundState.viewYear++;
+    renderMultiFundMonthGrid();
+  });
+
+  // Submit multi-fund
+  $('#multiFundSubmit').on('click', async function () {
+    if (multiFundState.selectedMonths.size === 0) {
+      alert('Vui lòng chọn ít nhất 1 tháng.');
+      return;
+    }
+    if (!EXPORT_SCRIPT_URL) {
+      alert('Chưa cấu hình EXPORT_SCRIPT_URL.');
+      return;
+    }
+
+    const $btn = $(this);
+    $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Đang ghi...');
+
+    const months = Array.from(multiFundState.selectedMonths).sort().map(t => {
+      const [mm, yyyy] = t.split('/');
+      return {
+        thang: t,
+        date: '01/' + t, // first day of month as NGAY
+        timestamp: new Date(parseInt(yyyy), parseInt(mm) - 1, 1, 8, 0, 0).toISOString()
+      };
+    });
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+    try {
+      const response = await fetch(EXPORT_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'closeFundMultiple',
+          maHV: multiFundState.maHV,
+          hoTen: multiFundState.hoTen,
+          ngaySinh: multiFundState.ngaySinh,
+          capDai: multiFundState.capDai,
+          months: months
+        }),
+        redirect: 'follow',
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+
+      let result = null;
+      let assumedSuccess = false;
+      try {
+        const readController = new AbortController();
+        const readTimeoutId = setTimeout(() => readController.abort(), 5000);
+        const text = await response.text();
+        clearTimeout(readTimeoutId);
+        result = text ? JSON.parse(text) : null;
+      } catch (readErr) {
+        console.warn('[multiFund] Cannot read response. Assuming success.', readErr);
+        result = { success: true, written: months.map(m => m.thang), writtenCount: months.length, duplicateCount: 0, assumed: true };
+        assumedSuccess = true;
+      }
+
+      console.log('[multiFund] result:', result);
+
+      if (result && result.success) {
+        // Add all written months to the per-person map
+        const personKey = normalize(multiFundState.hoTen);
+        if (!fundByPersonMap.has(personKey)) {
+          fundByPersonMap.set(personKey, new Set());
+        }
+        const personSet = fundByPersonMap.get(personKey);
+        (result.written || []).forEach(t => personSet.add(t));
+
+        let msg = 'Đã đóng quỹ ' + result.writtenCount + ' tháng cho ' + multiFundState.hoTen + '.';
+        if (result.duplicateCount > 0) {
+          msg += '\nBỏ qua ' + result.duplicateCount + ' tháng đã đóng trước đó: ' + result.duplicates.join(', ');
+        }
+        if (assumedSuccess) {
+          msg += '\n(Không xác nhận được từ server - kiểm tra sheet nếu cần)';
+        }
+        alert(msg);
+
+        // Update the single-month fund button if current month was among the written
+        const now = new Date();
+        const currentThang = String(now.getMonth() + 1).padStart(2, '0') + '/' + now.getFullYear();
+        if ((result.written || []).includes(currentThang)) {
+          fundThisMonthSet.add(personKey);
+          updateButtonStates();
+        }
+
+        $('#multiFundModal').modal('hide');
+      } else {
+        throw new Error((result && result.error) || 'Lỗi không xác định');
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError') {
+        console.warn('[multiFund] Timeout - assuming success');
+        const now = new Date();
+        const currentThang = String(now.getMonth() + 1).padStart(2, '0') + '/' + now.getFullYear();
+        if (months.some(m => m.thang === currentThang)) {
+          fundThisMonthSet.add(normalize(multiFundState.hoTen));
+          updateButtonStates();
+        }
+        alert('Đã ghi (timeout - kiểm tra sheet nếu cần)');
+        $('#multiFundModal').modal('hide');
+        return;
+      }
+      alert('Lỗi khi đóng quỹ nhiều tháng: ' + err.message);
+      console.error('[multiFund] error:', err);
+    } finally {
+      $btn.prop('disabled', false).html('<i class="fa fa-coins"></i> Đóng quỹ');
+    }
   });
 
   // ===== Init =====

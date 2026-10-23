@@ -58,6 +58,8 @@ function doPost(e) {
       return handleAttendanceMultiple(data);
     } else if (action === 'closeFund') {
       return handleCloseFund(data);
+    } else if (action === 'closeFundMultiple') {
+      return handleCloseFundMultiple(data);
     } else {
       return handleExport(data);
     }
@@ -80,7 +82,7 @@ function doGet(e) {
     .createTextOutput(JSON.stringify({
       status: 'ok',
       message: 'Taekwondo PTIT endpoint is live. POST JSON to use.',
-      actions: ['export', 'attendance', 'attendanceMultiple', 'closeFund'],
+      actions: ['export', 'attendance', 'attendanceMultiple', 'closeFund', 'closeFundMultiple'],
       destinationSheetId: DESTINATION_SHEET_ID,
       attendanceTab: ATTENDANCE_TAB_NAME,
       fundTab: FUND_TAB_NAME
@@ -331,6 +333,108 @@ function handleAttendanceMultiple(data) {
     .createTextOutput(JSON.stringify({
       success: true,
       action: 'attendanceMultiple',
+      written: written,
+      duplicates: duplicates,
+      writtenCount: written.length,
+      duplicateCount: duplicates.length,
+      sheetName: sheet.getName()
+    }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * ACTION: closeFundMultiple
+ * Appends multiple rows to the "dongquy" tab for a specific member.
+ * Each month is checked individually for duplicates.
+ * Body: { maHV, hoTen, ngaySinh, capDai, months: [{thang, date, timestamp}, ...] }
+ * Returns: { success, written: [thang], duplicates: [thang], writtenCount, duplicateCount }
+ */
+function handleCloseFundMultiple(data) {
+  const ss = SpreadsheetApp.openById(DESTINATION_SHEET_ID);
+
+  // Find the dongquy tab
+  let sheet = ss.getSheetByName(FUND_TAB_NAME);
+  if (!sheet) {
+    const sheets = ss.getSheets();
+    sheet = sheets.find(s => s.getSheetId() === FUND_TAB_GID);
+  }
+  if (!sheet && ss.getSheets().length > 2) {
+    sheet = ss.getSheets()[2];
+  }
+  if (!sheet) {
+    sheet = ss.insertSheet(FUND_TAB_NAME);
+  }
+
+  // Write header if sheet is empty
+  if (sheet.getLastRow() === 0) {
+    sheet.getRange(1, 1, 1, FUND_HEADERS.length).setValues([FUND_HEADERS]);
+    const headerRange = sheet.getRange(1, 1, 1, FUND_HEADERS.length);
+    headerRange
+      .setFontWeight('bold')
+      .setBackground(HEADER_BG_COLOR)
+      .setFontColor(HEADER_TEXT_COLOR)
+      .setHorizontalAlignment('center');
+    sheet.setFrozenRows(1);
+  }
+
+  const months = Array.isArray(data.months) ? data.months : [];
+  const maHV = (data.maHV || '').trim();
+  const hoTen = (data.hoTen || '').trim();
+  const ngaySinh = data.ngaySinh || '';
+  const capDai = data.capDai || '';
+
+  // Load existing data once for duplicate checking
+  const lastRow = sheet.getLastRow();
+  let existing = [];
+  if (lastRow > 1) {
+    existing = sheet.getRange(2, 1, lastRow - 1, FUND_HEADERS.length).getValues();
+  }
+
+  const written = [];
+  const duplicates = [];
+
+  months.forEach(m => {
+    const thang = (m && m.thang) ? String(m.thang).trim() : '';
+    if (!thang) return;
+
+    // Check duplicate: same THANG + same person
+    const dup = existing.find(r => {
+      const rowNgay = String(r[0]).trim();
+      const rowThang = rowNgay.length >= 10 ? rowNgay.substring(3, 10) : '';
+      if (rowThang !== thang) return false;
+      if (maHV && String(r[2]).trim()) {
+        return String(r[2]).trim() === maHV;
+      }
+      return String(r[3]).trim() === hoTen;
+    });
+
+    if (dup) {
+      duplicates.push(thang);
+      return;
+    }
+
+    // Write new row. NGAY = first day of that month (dd/MM/yyyy)
+    const ngay = m.date || (thang.length === 7 ? '01/' + thang : thang);
+    const row = [
+      ngay,
+      m.timestamp || new Date().toISOString(),
+      maHV,
+      hoTen,
+      ngaySinh,
+      capDai,
+      ''
+    ];
+    sheet.appendRow(row);
+
+    // Add to existing to prevent duplicates within the same batch
+    existing.push(row);
+    written.push(thang);
+  });
+
+  return ContentService
+    .createTextOutput(JSON.stringify({
+      success: true,
+      action: 'closeFundMultiple',
       written: written,
       duplicates: duplicates,
       writtenCount: written.length,
