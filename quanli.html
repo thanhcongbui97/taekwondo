@@ -335,6 +335,15 @@
   // Leave empty to disable the export button.
   const EXPORT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw4GZwiPmet6oAKEIacG-Sx9LN3Df2kb9dtoCiRWCqhCdN8tILd7qgFbiXzsmZLoXa0/exec';
 
+  // ===== Status sheet config (for pre-checking attendance/fund duplicates) =====
+  // Same spreadsheet as EXPORT_SHEET_ID, but different tabs.
+  // Read via JSONP (same pattern as member data) to pre-disable buttons.
+  const STATUS_SHEET_ID = '1v85Al1tqyt7D6u11U5Ede6UeBG8oV9dU2-1Vht3eglE';
+  const STATUS_ATTENDANCE_GID = 1395531960; // tab "diemdanh"
+  const STATUS_FUND_GID = 803125790;       // tab "dongquy"
+  const STATUS_ATTENDANCE_URL = `https://docs.google.com/spreadsheets/d/${STATUS_SHEET_ID}/gviz/tq?gid=${STATUS_ATTENDANCE_GID}`;
+  const STATUS_FUND_URL = `https://docs.google.com/spreadsheets/d/${STATUS_SHEET_ID}/gviz/tq?gid=${STATUS_FUND_GID}`;
+
   // Column index map (0-based, matches the order in the sheet)
   const COL = {
     STT: 0,
@@ -461,6 +470,8 @@
   let ntntMap = new Map();         // key: normalize(name) -> [{position, term}, ...] (nam thanh nữ tú)
   let isLoading = false;           // true while loadData() is in progress
   let isCollapsed = false;         // true when cards are collapsed (only show name, DOB, belt rank)
+  let attendanceTodaySet = new Set();  // normalized names who already attended today
+  let fundThisMonthSet = new Set();    // normalized names who already paid fund this month
 
   // ===== DOM refs =====
   const $searchInput = $('#searchInput');
@@ -914,6 +925,77 @@
     }
   }
 
+  // ===== Status loading (pre-check attendance/fund duplicates) =====
+  // Reads the "diemdanh" and "dongquy" tabs to build sets of people who
+  // already attended today / paid fund this month. Used to pre-disable
+  // the corresponding buttons in each card.
+  async function loadStatus() {
+    const now = new Date();
+    const today = now.toLocaleDateString('vi-VN'); // dd/mm/yyyy
+    const thang = String(now.getMonth() + 1).padStart(2, '0') + '/' + now.getFullYear();
+
+    // Load attendance tab
+    try {
+      const data = await jsonpLoad(STATUS_ATTENDANCE_URL);
+      const rows = (data.table.rows || []).filter(r => r.c && r.c.some(cell => cell && cell.v != null));
+      rows.forEach(row => {
+        const ngay = String(getCellValue(row, 0)).trim(); // NGAY column
+        const hoTen = String(getCellValue(row, 3)).trim(); // HO_TEN column
+        if (ngay === today && hoTen) {
+          attendanceTodaySet.add(normalize(hoTen));
+        }
+      });
+    } catch (err) {
+      console.warn('Không tải được trạng thái điểm danh:', err);
+    }
+
+    // Load fund tab
+    try {
+      const data = await jsonpLoad(STATUS_FUND_URL);
+      const rows = (data.table.rows || []).filter(r => r.c && r.c.some(cell => cell && cell.v != null));
+      rows.forEach(row => {
+        const ngay = String(getCellValue(row, 0)).trim(); // NGAY column
+        const hoTen = String(getCellValue(row, 3)).trim(); // HO_TEN column
+        if (ngay && hoTen && ngay.length >= 10) {
+          const rowThang = ngay.substring(3, 10); // extract MM/yyyy from dd/MM/yyyy
+          if (rowThang === thang) {
+            fundThisMonthSet.add(normalize(hoTen));
+          }
+        }
+      });
+    } catch (err) {
+      console.warn('Không tải được trạng thái đóng quỹ:', err);
+    }
+
+    // Update any buttons already rendered (in case user searched before status loaded)
+    updateButtonStates();
+  }
+
+  // Update existing attendance/fund buttons based on loaded status.
+  // Called after loadStatus() completes and can be called after each search.
+  function updateButtonStates() {
+    $('.attendance-btn').each(function () {
+      const $btn = $(this);
+      if ($btn.prop('disabled')) return; // already disabled
+      const hoTen = $btn.data('ho-ten');
+      if (hoTen && attendanceTodaySet.has(normalize(hoTen))) {
+        $btn.removeClass('btn-success').addClass('btn-outline-secondary')
+          .prop('disabled', true)
+          .html('<i class="fa fa-check"></i> Đã điểm danh hôm nay');
+      }
+    });
+    $('.close-fund-btn').each(function () {
+      const $btn = $(this);
+      if ($btn.prop('disabled')) return;
+      const hoTen = $btn.data('ho-ten');
+      if (hoTen && fundThisMonthSet.has(normalize(hoTen))) {
+        $btn.removeClass('btn-warning').addClass('btn-outline-secondary')
+          .prop('disabled', true)
+          .html('<i class="fa fa-check"></i> Đã đóng quỹ tháng này');
+      }
+    });
+  }
+
   // ===== Search =====
     function performSearch() {
       if (isLoading) {
@@ -1136,20 +1218,28 @@
             ${hieuLuc ? `<div class="field"><i class="fas fa-check-circle"></i><strong>Hiệu lực:</strong> ${escapeHtml(hieuLuc)}</div>` : ''}
             ${regFieldsHtml}
             ${extraFieldsHtml}
-            <button class="btn btn-sm btn-success attendance-btn mt-2 w-100"
-                    data-ho-ten="${escapeHtml(hoTen)}"
-                    data-ma-hv="${escapeHtml(maHV)}"
-                    data-ngay-sinh="${escapeHtml(ngaySinh)}"
-                    data-cap-dai="${escapeHtml(updatedCapDai || capDai || '')}">
-              <i class="fa fa-calendar-check"></i> Điểm danh hôm nay
-            </button>
-            <button class="btn btn-sm btn-warning close-fund-btn mt-1 w-100"
-                    data-ho-ten="${escapeHtml(hoTen)}"
-                    data-ma-hv="${escapeHtml(maHV)}"
-                    data-ngay-sinh="${escapeHtml(ngaySinh)}"
-                    data-cap-dai="${escapeHtml(updatedCapDai || capDai || '')}">
-              <i class="fa fa-coins"></i> Đóng quỹ tháng này
-            </button>
+            ${attendanceTodaySet.has(normalize(hoTen))
+              ? `<button class="btn btn-sm btn-outline-secondary attendance-btn mt-2 w-100" disabled>
+                   <i class="fa fa-check"></i> Đã điểm danh hôm nay
+                 </button>`
+              : `<button class="btn btn-sm btn-success attendance-btn mt-2 w-100"
+                       data-ho-ten="${escapeHtml(hoTen)}"
+                       data-ma-hv="${escapeHtml(maHV)}"
+                       data-ngay-sinh="${escapeHtml(ngaySinh)}"
+                       data-cap-dai="${escapeHtml(updatedCapDai || capDai || '')}">
+                   <i class="fa fa-calendar-check"></i> Điểm danh hôm nay
+                 </button>`}
+            ${fundThisMonthSet.has(normalize(hoTen))
+              ? `<button class="btn btn-sm btn-outline-secondary close-fund-btn mt-1 w-100" disabled>
+                   <i class="fa fa-check"></i> Đã đóng quỹ tháng này
+                 </button>`
+              : `<button class="btn btn-sm btn-warning close-fund-btn mt-1 w-100"
+                       data-ho-ten="${escapeHtml(hoTen)}"
+                       data-ma-hv="${escapeHtml(maHV)}"
+                       data-ngay-sinh="${escapeHtml(ngaySinh)}"
+                       data-cap-dai="${escapeHtml(updatedCapDai || capDai || '')}">
+                   <i class="fa fa-coins"></i> Đóng quỹ tháng này
+                 </button>`}
           </div>
         </div>
       </div>
@@ -1170,20 +1260,28 @@
             <hr class="my-2">
             ${reg.dob ? `<div class="field field-keep"><i class="fas fa-birthday-cake"></i><strong>Ngày sinh:</strong> ${escapeHtml(reg.dob)}</div>` : ''}
             ${regFieldsHtml}
-            <button class="btn btn-sm btn-success attendance-btn mt-2 w-100"
-                    data-ho-ten="${escapeHtml(reg.name)}"
-                    data-ma-hv=""
-                    data-ngay-sinh="${escapeHtml(reg.dob || '')}"
-                    data-cap-dai="">
-              <i class="fa fa-calendar-check"></i> Điểm danh hôm nay
-            </button>
-            <button class="btn btn-sm btn-warning close-fund-btn mt-1 w-100"
-                    data-ho-ten="${escapeHtml(reg.name)}"
-                    data-ma-hv=""
-                    data-ngay-sinh="${escapeHtml(reg.dob || '')}"
-                    data-cap-dai="">
-              <i class="fa fa-coins"></i> Đóng quỹ tháng này
-            </button>
+            ${attendanceTodaySet.has(normalize(reg.name))
+              ? `<button class="btn btn-sm btn-outline-secondary attendance-btn mt-2 w-100" disabled>
+                   <i class="fa fa-check"></i> Đã điểm danh hôm nay
+                 </button>`
+              : `<button class="btn btn-sm btn-success attendance-btn mt-2 w-100"
+                       data-ho-ten="${escapeHtml(reg.name)}"
+                       data-ma-hv=""
+                       data-ngay-sinh="${escapeHtml(reg.dob || '')}"
+                       data-cap-dai="">
+                   <i class="fa fa-calendar-check"></i> Điểm danh hôm nay
+                 </button>`}
+            ${fundThisMonthSet.has(normalize(reg.name))
+              ? `<button class="btn btn-sm btn-outline-secondary close-fund-btn mt-1 w-100" disabled>
+                   <i class="fa fa-check"></i> Đã đóng quỹ tháng này
+                 </button>`
+              : `<button class="btn btn-sm btn-warning close-fund-btn mt-1 w-100"
+                       data-ho-ten="${escapeHtml(reg.name)}"
+                       data-ma-hv=""
+                       data-ngay-sinh="${escapeHtml(reg.dob || '')}"
+                       data-cap-dai="">
+                   <i class="fa fa-coins"></i> Đóng quỹ tháng này
+                 </button>`}
           </div>
         </div>
       </div>
@@ -1610,6 +1708,7 @@
   // (Auth gate at top of script already redirected if not authed)
   $(document).ready(function () {
     loadData();
+    loadStatus(); // load attendance/fund status in parallel (non-blocking)
   });
   </script>
 
