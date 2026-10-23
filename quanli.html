@@ -207,7 +207,7 @@
                           <button class="btn btn-outline-primary" id="collapseBtn" type="button" title="Thu gọn tất cả thẻ - chỉ giữ tên, ngày sinh, cấp đai">
                               <i class="fa fa-compress ml-1"></i> Thu gọn
                           </button>
-                          <button class="btn btn-outline-success" id="exportBtn" type="button" title="Ghi toàn bộ hội viên vào Google Sheet (ghi đè)">
+                          <button class="btn btn-outline-success" id="exportBtn" type="button" title="Ghi toàn bộ hội viên và hồ sơ đăng ký vào Google Sheet (ghi đè)">
                               <i class="fa fa-file-export ml-1"></i> Ghi vào Sheet
                           </button>
                       </div>
@@ -1203,9 +1203,12 @@
 
   // ===== Export to Google Sheet =====
   // Collects all loaded member rows (merged with registration, exam, BCN, NTNT data)
-  // and POSTs them to the Apps Script Web App, which overwrites the destination sheet.
+  // AND all registration-only entries (people who registered but aren't in the member sheet).
+  // POSTs them to the Apps Script Web App, which overwrites the destination sheet.
   // Column order MUST match the Apps Script's expected header order.
+  // LOAI column: "HV" = official member, "DK" = registration-only record.
   const EXPORT_HEADERS = [
+    'LOAI',
     'STT', 'MA_HV', 'HO_TEN', 'NGAY_SINH', 'GIOI_TINH', 'SDT', 'EMAIL', 'CMND',
     'TRINH_DO', 'CAP_DAI', 'CAP_DAI_THI', 'HIEU_LUC', 'NGAY_THAM_GIA', 'DIA_CHI',
     'CLB', 'MA_CLB', 'MA_DON_VI', 'TO_CHUC', 'MA_HLV', 'MA_TT', 'VB_KUKKIWON',
@@ -1216,6 +1219,8 @@
     'TIMESTAMP_GHI'
   ];
 
+  // Build a row for an official member (from main member sheet).
+  // Registration data is merged in if a matching registration record exists.
   function buildExportRow(row, timestamp) {
     const hoTen    = getCellValue(row, COL.HO_TEN);
     const ngaySinh = formatDate(getCellValue(row, COL.NGAY_SINH));
@@ -1232,6 +1237,7 @@
     ).join('; ');
 
     return [
+      'HV',
       getCellValue(row, COL.STT),
       getCellValue(row, COL.MA_HV),
       hoTen,
@@ -1271,6 +1277,50 @@
     ];
   }
 
+  // Build a row for a registration-only entry (not in the main member sheet).
+  // Member-specific fields (MA_HV, CAP_DAI, CLB, etc.) are left empty.
+  function buildRegistrationOnlyExportRow(reg, timestamp) {
+    return [
+      'DK',
+      '',  // STT
+      '',  // MA_HV
+      reg.name || '',
+      reg.dob || '',
+      '',  // GIOI_TINH
+      reg.phone || '',
+      reg.email || '',
+      '',  // CMND
+      '',  // TRINH_DO
+      '',  // CAP_DAI
+      '',  // CAP_DAI_THI
+      '',  // HIEU_LUC
+      '',  // NGAY_THAM_GIA
+      '',  // DIA_CHI
+      '',  // CLB
+      '',  // MA_CLB
+      '',  // MA_DON_VI
+      '',  // TO_CHUC
+      '',  // MA_HLV
+      '',  // MA_TT
+      '',  // VB_KUKKIWON
+      '',  // MA_GAL
+      '',  // MA_GSGK
+      '',  // MA_HV_CU
+      '',  // GHI_CHU
+      '',  // BCN
+      '',  // NTNT
+      reg.school || '',
+      reg.studentId || '',
+      reg.facebook || '',
+      reg.source || '',
+      reg.learned || '',
+      reg.certificate || '',
+      reg.expectations || '',
+      reg.note || '',
+      timestamp
+    ];
+  }
+
   async function exportToSheet() {
     if (!EXPORT_SCRIPT_URL) {
       alert('Chưa cấu hình EXPORT_SCRIPT_URL.\n\n' +
@@ -1285,24 +1335,53 @@
       alert('Dữ liệu đang được tải, vui lòng đợi.');
       return;
     }
-    if (allRows.length === 0) {
-      alert('Chưa có dữ liệu hội viên để ghi. Vui lòng đợi tải xong hoặc bấm "Tải lại".');
+    if (allRows.length === 0 && registrationMap.size === 0) {
+      alert('Chưa có dữ liệu để ghi. Vui lòng đợi tải xong hoặc bấm "Tải lại".');
       return;
     }
 
-    const count = allRows.length;
-    if (!confirm(`Ghi đè toàn bộ sheet đích với ${count} hội viên?\n\n` +
-                 `Dữ liệu cũ trong sheet sẽ bị XÓA và thay bằng ${count} bản ghi mới.\n\n` +
+    // Build set of member names (normalized) to detect registration-only entries
+    const memberNames = new Set();
+    allRows.forEach(row => {
+      const name = getCellValue(row, COL.HO_TEN);
+      if (name) memberNames.add(normalize(name));
+    });
+
+    // Count registration-only entries (not matched with any member)
+    let regOnlyCount = 0;
+    registrationMap.forEach((reg, regName) => {
+      if (!memberNames.has(regName)) regOnlyCount++;
+    });
+
+    const memberCount = allRows.length;
+    const totalCount = memberCount + regOnlyCount;
+
+    if (!confirm(`Ghi đè toàn bộ sheet đích với:\n\n` +
+                 `• ${memberCount} hội viên chính thức (LOAI = HV)\n` +
+                 `• ${regOnlyCount} hồ sơ đăng ký (LOAI = DK)\n` +
+                 `• Tổng: ${totalCount} bản ghi\n\n` +
+                 `Dữ liệu cũ trong sheet sẽ bị XÓA và thay bằng ${totalCount} bản ghi mới.\n\n` +
                  `Tiếp tục?`)) {
       return;
     }
 
     const timestamp = new Date().toISOString();
-    const rows = allRows.map(row => buildExportRow(row, timestamp));
+    const rows = [];
+
+    // 1. All official members (with merged registration data if available)
+    allRows.forEach(row => {
+      rows.push(buildExportRow(row, timestamp));
+    });
+
+    // 2. Registration-only entries (not matched with any member)
+    registrationMap.forEach((reg, regName) => {
+      if (memberNames.has(regName)) return; // skip - already written as HV
+      rows.push(buildRegistrationOnlyExportRow(reg, timestamp));
+    });
 
     // Disable button + show spinner
     $exportBtn.prop('disabled', true)
-      .html('<i class="fa fa-spinner fa-spin ml-1"></i> Đang ghi ' + count + ' bản ghi...');
+      .html('<i class="fa fa-spinner fa-spin ml-1"></i> Đang ghi ' + totalCount + ' bản ghi...');
 
     try {
       const response = await fetch(EXPORT_SCRIPT_URL, {
@@ -1322,7 +1401,10 @@
       }
 
       if (result && result.success) {
-        alert(`Đã ghi ${result.count} hội viên vào sheet thành công!\n\n` +
+        alert(`Đã ghi vào sheet thành công!\n\n` +
+              `• ${memberCount} hội viên chính thức (LOAI = HV)\n` +
+              `• ${regOnlyCount} hồ sơ đăng ký (LOAI = DK)\n` +
+              `• Tổng: ${result.count} bản ghi\n\n` +
               `Sheet: https://docs.google.com/spreadsheets/d/${EXPORT_SHEET_ID}`);
       } else {
         throw new Error((result && result.error) || 'Lỗi không xác định từ Apps Script');
