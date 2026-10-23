@@ -207,6 +207,9 @@
                           <button class="btn btn-outline-primary" id="collapseBtn" type="button" title="Thu gọn tất cả thẻ - chỉ giữ tên, ngày sinh, cấp đai">
                               <i class="fa fa-compress ml-1"></i> Thu gọn
                           </button>
+                          <button class="btn btn-outline-success" id="exportBtn" type="button" title="Ghi toàn bộ hội viên vào Google Sheet (ghi đè)">
+                              <i class="fa fa-file-export ml-1"></i> Ghi vào Sheet
+                          </button>
                       </div>
                       <div class="text-center mt-4">
                           <small class="text-muted">Tìm kiếm theo tên và/hoặc năm sinh. Không phân biệt hoa/thường, không cần nhập đầy đủ tên.</small>
@@ -324,6 +327,13 @@
   const SHEET10_ID = '1E46oxX0ASNfc-9_8NKPsK5tljWVSQKjsBOOtX1q2kYI';
   const SHEET10_GID = '0';
   const SHEET10_URL = `https://docs.google.com/spreadsheets/d/${SHEET10_ID}/gviz/tq?gid=${SHEET10_GID}`;
+
+  // ===== Export config =====
+  // Destination sheet (will be overwritten on each export)
+  const EXPORT_SHEET_ID = '1v85Al1tqyt7D6u11U5Ede6UeBG8oV9dU2-1Vht3eglE';
+  // Apps Script Web App URL - deploy the script (see apps-script-export.gs) and paste the /exec URL here.
+  // Leave empty to disable the export button.
+  const EXPORT_SCRIPT_URL = '';
 
   // Column index map (0-based, matches the order in the sheet)
   const COL = {
@@ -458,6 +468,7 @@
     const $searchBtn = $('#searchBtn');
     const $reloadBtn = $('#reloadBtn');
     const $collapseBtn = $('#collapseBtn');
+    const $exportBtn = $('#exportBtn');
     const $loading = $('#loading');
     const $loadingBar = $('#loadingBar');
     const $loadingPercent = $('#loadingPercent');
@@ -1189,6 +1200,148 @@
     isCollapsed = !isCollapsed;
     applyCollapseState();
   });
+
+  // ===== Export to Google Sheet =====
+  // Collects all loaded member rows (merged with registration, exam, BCN, NTNT data)
+  // and POSTs them to the Apps Script Web App, which overwrites the destination sheet.
+  // Column order MUST match the Apps Script's expected header order.
+  const EXPORT_HEADERS = [
+    'STT', 'MA_HV', 'HO_TEN', 'NGAY_SINH', 'GIOI_TINH', 'SDT', 'EMAIL', 'CMND',
+    'TRINH_DO', 'CAP_DAI', 'CAP_DAI_THI', 'HIEU_LUC', 'NGAY_THAM_GIA', 'DIA_CHI',
+    'CLB', 'MA_CLB', 'MA_DON_VI', 'TO_CHUC', 'MA_HLV', 'MA_TT', 'VB_KUKKIWON',
+    'MA_GAL', 'MA_GSGK', 'MA_HV_CU', 'GHI_CHU',
+    'BCN', 'NTNT',
+    'DK_TRUONG', 'DK_MA_SV', 'DK_FACEBOOK', 'DK_NGUON_BIET', 'DK_DA_HOC',
+    'DK_CHUNG_NHAN', 'DK_MONG_MUON', 'DK_GHI_CHU',
+    'TIMESTAMP_GHI'
+  ];
+
+  function buildExportRow(row, timestamp) {
+    const hoTen    = getCellValue(row, COL.HO_TEN);
+    const ngaySinh = formatDate(getCellValue(row, COL.NGAY_SINH));
+    const regKey   = normalize(hoTen);
+    const reg      = registrationMap.get(regKey) || {};
+    const examKey  = normalize(hoTen) + '|' + ngaySinh;
+    const capDaiThi = beltRankMap.get(examKey) || '';
+    const bcnEntries  = bcnMap.get(normalize(hoTen)) || [];
+    const ntntEntries = ntntMap.get(normalize(hoTen)) || [];
+
+    // Join BCN/NTNT entries as "Chức vụ (Nhiệm kỳ); ..."
+    const joinEntries = (entries) => entries.map(e =>
+      e.term ? `${e.position} (${e.term})` : e.position
+    ).join('; ');
+
+    return [
+      getCellValue(row, COL.STT),
+      getCellValue(row, COL.MA_HV),
+      hoTen,
+      ngaySinh,
+      getCellValue(row, COL.GIOI_TINH),
+      getCellValue(row, COL.SDT),
+      getCellValue(row, COL.EMAIL),
+      getCellValue(row, COL.CMND),
+      getCellValue(row, COL.TRINH_DO),
+      getCellValue(row, COL.CAP_DAI),
+      capDaiThi,
+      getCellValue(row, COL.HIEU_LUC),
+      formatDate(getCellValue(row, COL.NGAY_THAM_GIA)),
+      getCellValue(row, COL.DIA_CHI),
+      getCellValue(row, COL.CLB),
+      getCellValue(row, COL.MA_CLB),
+      getCellValue(row, COL.MA_DON_VI),
+      getCellValue(row, COL.TO_CHUC),
+      getCellValue(row, COL.MA_HLV),
+      getCellValue(row, COL.MA_TT),
+      getCellValue(row, COL.VB_KUKKIWON),
+      getCellValue(row, COL.MA_GAL),
+      getCellValue(row, COL.MA_GSGK),
+      getCellValue(row, COL.MA_HV_CU),
+      getCellValue(row, COL.GHI_CHU),
+      joinEntries(bcnEntries),
+      joinEntries(ntntEntries),
+      reg.school || '',
+      reg.studentId || '',
+      reg.facebook || '',
+      reg.source || '',
+      reg.learned || '',
+      reg.certificate || '',
+      reg.expectations || '',
+      reg.note || '',
+      timestamp
+    ];
+  }
+
+  async function exportToSheet() {
+    if (!EXPORT_SCRIPT_URL) {
+      alert('Chưa cấu hình EXPORT_SCRIPT_URL.\n\n' +
+            'Bước 1: Mở Google Sheet đích\n' +
+            'Bước 2: Vào Extensions > Apps Script\n' +
+            'Bước 3: Paste code (xem file apps-script-export.gs)\n' +
+            'Bước 4: Deploy > New deployment > Web app\n' +
+            'Bước 5: Copy URL /exec và paste vào EXPORT_SCRIPT_URL trong quanli.html');
+      return;
+    }
+    if (isLoading) {
+      alert('Dữ liệu đang được tải, vui lòng đợi.');
+      return;
+    }
+    if (allRows.length === 0) {
+      alert('Chưa có dữ liệu hội viên để ghi. Vui lòng đợi tải xong hoặc bấm "Tải lại".');
+      return;
+    }
+
+    const count = allRows.length;
+    if (!confirm(`Ghi đè toàn bộ sheet đích với ${count} hội viên?\n\n` +
+                 `Dữ liệu cũ trong sheet sẽ bị XÓA và thay bằng ${count} bản ghi mới.\n\n` +
+                 `Tiếp tục?`)) {
+      return;
+    }
+
+    const timestamp = new Date().toISOString();
+    const rows = allRows.map(row => buildExportRow(row, timestamp));
+
+    // Disable button + show spinner
+    $exportBtn.prop('disabled', true)
+      .html('<i class="fa fa-spinner fa-spin ml-1"></i> Đang ghi ' + count + ' bản ghi...');
+
+    try {
+      const response = await fetch(EXPORT_SCRIPT_URL, {
+        method: 'POST',
+        // Apps Script web apps reject custom Content-Type headers (causes CORS preflight).
+        // Sending as text/plain avoids the preflight and is accepted by e.postData.contents.
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ headers: EXPORT_HEADERS, rows: rows }),
+        redirect: 'follow'
+      });
+
+      let result;
+      try {
+        result = await response.json();
+      } catch (parseErr) {
+        throw new Error('Phản hồi không hợp lệ từ Apps Script. Kiểm tra URL và quyền truy cập.');
+      }
+
+      if (result && result.success) {
+        alert(`Đã ghi ${result.count} hội viên vào sheet thành công!\n\n` +
+              `Sheet: https://docs.google.com/spreadsheets/d/${EXPORT_SHEET_ID}`);
+      } else {
+        throw new Error((result && result.error) || 'Lỗi không xác định từ Apps Script');
+      }
+    } catch (err) {
+      alert('Lỗi khi ghi vào sheet:\n' + err.message +
+            '\n\nKiểm tra:\n' +
+            '1. EXPORT_SCRIPT_URL đã đúng chưa\n' +
+            '2. Apps Script đã deploy chưa (Deploy > Manage deployments)\n' +
+            '3. Quyền truy cập: "Anyone" chứ không phải "Anyone with Google account"\n' +
+            '4. Sheet ID trong Apps Script đã khớp chưa');
+      console.error('Export error:', err);
+    } finally {
+      $exportBtn.prop('disabled', false)
+        .html('<i class="fa fa-file-export ml-1"></i> Ghi vào Sheet');
+    }
+  }
+
+  $exportBtn.on('click', exportToSheet);
 
   // ===== Init =====
   // (Auth gate at top of script already redirected if not authed)
