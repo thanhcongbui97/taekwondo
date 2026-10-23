@@ -1591,6 +1591,10 @@
     $btn.prop('disabled', true)
       .html('<i class="fa fa-spinner fa-spin"></i> Đang ghi...');
 
+    // Timeout controller (30s)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
     try {
       const response = await fetch(EXPORT_SCRIPT_URL, {
         method: 'POST',
@@ -1604,15 +1608,28 @@
           ngaySinh: ngaySinh,
           capDai: capDai
         }),
-        redirect: 'follow'
+        redirect: 'follow',
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
+
+      // Log full response for debugging
+      console.log('[closeFundForMember] HTTP', response.status, response.statusText);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status} ${response.statusText}`);
+      }
 
       let result;
       try {
         result = await response.json();
       } catch (parseErr) {
-        throw new Error('Phản hồi không hợp lệ từ Apps Script.');
+        const text = await response.text().catch(() => '');
+        console.error('[closeFundForMember] Non-JSON response:', text);
+        throw new Error('Phản hồi không phải JSON: ' + (text || '(rỗng)').substring(0, 200));
       }
+
+      console.log('[closeFundForMember] result:', result);
 
       if (result && result.success) {
         $btn.removeClass('btn-warning').addClass('btn-success')
@@ -1622,13 +1639,27 @@
           .html('<i class="fa fa-check"></i> Đã đóng quỹ ' + thang);
         alert(result.error || `${hoTen} đã đóng quỹ tháng ${thang} rồi.`);
       } else {
-        throw new Error((result && result.error) || 'Lỗi không xác định');
+        // Build informative error message
+        let errorMsg = 'Lỗi không xác định';
+        if (result && result.error) {
+          errorMsg = result.error;
+        } else if (result) {
+          errorMsg = 'Phản hồi lạ: ' + JSON.stringify(result).substring(0, 200);
+        } else {
+          errorMsg = 'Phản hồi rỗng từ Apps Script';
+        }
+        throw new Error(errorMsg);
       }
     } catch (err) {
-      alert('Lỗi khi đóng quỹ: ' + err.message);
+      clearTimeout(timeoutId);
+      let msg = err.message;
+      if (err.name === 'AbortError') {
+        msg = 'Quá thời gian chờ (30s). Apps Script có thể đang bận.';
+      }
+      alert('Lỗi khi đóng quỹ: ' + msg);
       $btn.prop('disabled', false)
         .html('<i class="fa fa-coins"></i> Đóng quỹ tháng này');
-      console.error('Close fund error:', err);
+      console.error('[closeFundForMember] error:', err);
     }
   }
 
@@ -1664,6 +1695,10 @@
     $btn.prop('disabled', true)
       .html('<i class="fa fa-spinner fa-spin"></i> Đang ghi...');
 
+    // Timeout controller (30s)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
     try {
       const response = await fetch(EXPORT_SCRIPT_URL, {
         method: 'POST',
@@ -1677,15 +1712,28 @@
           ngaySinh: ngaySinh,
           capDai: capDai
         }),
-        redirect: 'follow'
+        redirect: 'follow',
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
+
+      // Log full response for debugging
+      console.log('[markAttendance] HTTP', response.status, response.statusText);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status} ${response.statusText}`);
+      }
 
       let result;
       try {
         result = await response.json();
       } catch (parseErr) {
-        throw new Error('Phản hồi không hợp lệ từ Apps Script.');
+        const text = await response.text().catch(() => '');
+        console.error('[markAttendance] Non-JSON response:', text);
+        throw new Error('Phản hồi không phải JSON: ' + (text || '(rỗng)').substring(0, 200));
       }
+
+      console.log('[markAttendance] result:', result);
 
       if (result && result.success) {
         // Visual feedback: change to "Đã điểm danh" with check icon (green)
@@ -1697,14 +1745,28 @@
           .html('<i class="fa fa-check"></i> Đã điểm danh ' + dateStr);
         alert(result.error || 'Đã điểm danh rồi.');
       } else {
-        throw new Error((result && result.error) || 'Lỗi không xác định');
+        // Build informative error message
+        let errorMsg = 'Lỗi không xác định';
+        if (result && result.error) {
+          errorMsg = result.error;
+        } else if (result) {
+          errorMsg = 'Phản hồi lạ: ' + JSON.stringify(result).substring(0, 200);
+        } else {
+          errorMsg = 'Phản hồi rỗng từ Apps Script';
+        }
+        throw new Error(errorMsg);
       }
     } catch (err) {
-      alert('Lỗi khi điểm danh: ' + err.message);
+      clearTimeout(timeoutId);
+      let msg = err.message;
+      if (err.name === 'AbortError') {
+        msg = 'Quá thời gian chờ (30s). Apps Script có thể đang bận.';
+      }
+      alert('Lỗi khi điểm danh: ' + msg);
       // Re-enable button on error
       $btn.prop('disabled', false)
         .html('<i class="fa fa-calendar-check"></i> Điểm danh hôm nay');
-      console.error('Attendance error:', err);
+      console.error('[markAttendance] error:', err);
     }
   }
 
