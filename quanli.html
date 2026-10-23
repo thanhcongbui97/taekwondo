@@ -120,8 +120,8 @@
 
         /* Compact calendar day buttons (for mobile/iPhone) - reduce width only, keep height */
         .cal-day-btn {
-            padding-left: 0.1rem;
-            padding-right: 0.1rem;
+            padding-left: 0;
+            padding-right: 0;
             white-space: nowrap;
         }
         #multiAttCalendar table {
@@ -129,8 +129,8 @@
         }
         #multiAttCalendar th,
         #multiAttCalendar td {
-            padding-left: 0.15rem;
-            padding-right: 0.15rem;
+            padding-left: 0;
+            padding-right: 0;
         }
 
         /* Collapsed card state - hide all fields except essential ones
@@ -1901,9 +1901,9 @@
             cls = 'btn-light text-muted';
             disabled = 'disabled';
           } else if (isAttended) {
-            // Already attended - show green with checkmark, can't select
+            // Already attended - show green, can't select
             cls = 'btn-success';
-            label = '✓ ' + day;
+            label = String(day);
             title = dateStr + ' (đã điểm danh)';
             disabled = 'disabled';
           } else if (isSelected) {
