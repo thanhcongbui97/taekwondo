@@ -117,6 +117,16 @@
             right: 20px;
             z-index: 100;
         }
+
+        /* Collapsed card state - hide all fields except essential ones
+           (name in h5.card-title, belt rank badge, "Đăng ký mới" badge, and DOB with .field-keep) */
+        .member-card.card-collapsed .field:not(.field-keep),
+        .member-card.card-collapsed .bcn-tags,
+        .member-card.card-collapsed .ntnt-tags,
+        .member-card.card-collapsed hr.my-2,
+        .member-card.card-collapsed .field-section-title {
+            display: none;
+        }
     </style>
 </head>
 
@@ -193,6 +203,9 @@
                           <button class="btn btn-primary" id="searchBtn" type="button">Tìm kiếm <i class="fa fa-search ml-1"></i></button>
                           <button class="btn btn-outline-secondary" id="reloadBtn" type="button" title="Tải lại dữ liệu">
                               <i class="fa fa-refresh ml-1"></i> Tải lại
+                          </button>
+                          <button class="btn btn-outline-primary" id="collapseBtn" type="button" title="Thu gọn tất cả thẻ - chỉ giữ tên, ngày sinh, cấp đai">
+                              <i class="fa fa-compress ml-1"></i> Thu gọn
                           </button>
                       </div>
                       <div class="text-center mt-4">
@@ -437,12 +450,14 @@
   let bcnMap = new Map();          // key: normalize(name) -> [{position, term}, ...] (executive board)
   let ntntMap = new Map();         // key: normalize(name) -> [{position, term}, ...] (nam thanh nữ tú)
   let isLoading = false;           // true while loadData() is in progress
+  let isCollapsed = false;         // true when cards are collapsed (only show name, DOB, belt rank)
 
   // ===== DOM refs =====
   const $searchInput = $('#searchInput');
   const $searchYearInput = $('#searchYearInput');
     const $searchBtn = $('#searchBtn');
     const $reloadBtn = $('#reloadBtn');
+    const $collapseBtn = $('#collapseBtn');
     const $loading = $('#loading');
     const $loadingBar = $('#loadingBar');
     const $loadingPercent = $('#loadingPercent');
@@ -1019,6 +1034,9 @@
         renderMemberCard(row);
       }
     });
+
+    // Re-apply current collapse state to newly rendered cards
+    applyCollapseState();
   }
 
   function renderMemberCard(row) {
@@ -1097,7 +1115,7 @@
                 ${updatedCapDai ? renderBelt(updatedCapDai) : ''}
               <hr class="my-2">
             ${maHV ? `<div class="field"><i class="fas fa-id-badge"></i><strong>Mã HV:</strong> ${escapeHtml(maHV)}</div>` : ''}
-            ${ngaySinh ? `<div class="field"><i class="fas fa-birthday-cake"></i><strong>Ngày sinh:</strong> ${escapeHtml(ngaySinh)}</div>` : ''}
+            ${ngaySinh ? `<div class="field field-keep"><i class="fas fa-birthday-cake"></i><strong>Ngày sinh:</strong> ${escapeHtml(ngaySinh)}</div>` : ''}
             ${gioiTinh ? `<div class="field"><i class="fas fa-venus-mars"></i><strong>Giới tính:</strong> ${escapeHtml(gioiTinh)}</div>` : ''}
             ${sdt ? `<div class="field"><i class="fas fa-phone"></i><strong>SĐT:</strong> <a href="tel:${escapeHtml(sdt)}">${escapeHtml(sdt)}</a></div>` : ''}
             ${email ? `<div class="field"><i class="fas fa-envelope"></i><strong>Email:</strong> <a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a></div>` : ''}
@@ -1125,7 +1143,7 @@
             </h5>
             <span class="badge badge-warning mb-2"><i class="fas fa-clock"></i> Đăng ký mới</span>
             <hr class="my-2">
-            ${reg.dob ? `<div class="field"><i class="fas fa-birthday-cake"></i><strong>Ngày sinh:</strong> ${escapeHtml(reg.dob)}</div>` : ''}
+            ${reg.dob ? `<div class="field field-keep"><i class="fas fa-birthday-cake"></i><strong>Ngày sinh:</strong> ${escapeHtml(reg.dob)}</div>` : ''}
             ${regFieldsHtml}
           </div>
         </div>
@@ -1146,6 +1164,30 @@
   $searchYearInput.on('input', function () {
     // Only allow digits, max 4 chars
     this.value = this.value.replace(/[^0-9]/g, '').substring(0, 4);
+  });
+
+  // ===== Collapse / Expand toggle =====
+  // When collapsed, each member card only shows: name, date of birth, belt rank
+  // (or "Đăng ký mới" badge for registration-only cards). All other fields,
+  // BCN/NTNT tags, section titles and separators are hidden.
+  function applyCollapseState() {
+    const $cards = $('.member-card');
+    if (isCollapsed) {
+      $cards.addClass('card-collapsed');
+      $collapseBtn
+        .html('<i class="fa fa-expand ml-1"></i> Mở rộng')
+        .attr('title', 'Mở rộng tất cả thẻ - hiển thị đầy đủ thông tin');
+    } else {
+      $cards.removeClass('card-collapsed');
+      $collapseBtn
+        .html('<i class="fa fa-compress ml-1"></i> Thu gọn')
+        .attr('title', 'Thu gọn tất cả thẻ - chỉ giữ tên, ngày sinh, cấp đai');
+    }
+  }
+
+  $collapseBtn.on('click', function () {
+    isCollapsed = !isCollapsed;
+    applyCollapseState();
   });
 
   // ===== Init =====
