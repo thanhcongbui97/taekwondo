@@ -988,7 +988,7 @@
       if ($btn.prop('disabled')) return; // already disabled
       const hoTen = $btn.data('ho-ten');
       if (hoTen && attendanceTodaySet.has(normalize(hoTen))) {
-        $btn.removeClass('btn-success').addClass('btn-outline-secondary')
+        $btn.removeClass('btn-primary').addClass('btn-success')
           .prop('disabled', true)
           .html('<i class="fa fa-check"></i> Đã điểm danh hôm nay');
       }
@@ -998,7 +998,7 @@
       if ($btn.prop('disabled')) return;
       const hoTen = $btn.data('ho-ten');
       if (hoTen && fundThisMonthSet.has(normalize(hoTen))) {
-        $btn.removeClass('btn-warning').addClass('btn-outline-secondary')
+        $btn.removeClass('btn-warning').addClass('btn-success')
           .prop('disabled', true)
           .html('<i class="fa fa-check"></i> Đã đóng quỹ tháng này');
       }
@@ -1228,10 +1228,10 @@
             ${regFieldsHtml}
             ${extraFieldsHtml}
             ${attendanceTodaySet.has(normalize(hoTen))
-              ? `<button class="btn btn-sm btn-outline-secondary attendance-btn mt-2 w-100" disabled>
+              ? `<button class="btn btn-sm btn-success attendance-btn mt-2 w-100" disabled>
                    <i class="fa fa-check"></i> Đã điểm danh hôm nay
                  </button>`
-              : `<button class="btn btn-sm btn-success attendance-btn mt-2 w-100"
+              : `<button class="btn btn-sm btn-primary attendance-btn mt-2 w-100"
                        data-ho-ten="${escapeHtml(hoTen)}"
                        data-ma-hv="${escapeHtml(maHV)}"
                        data-ngay-sinh="${escapeHtml(ngaySinh)}"
@@ -1239,7 +1239,7 @@
                    <i class="fa fa-calendar-check"></i> Điểm danh hôm nay
                  </button>`}
             ${fundThisMonthSet.has(normalize(hoTen))
-              ? `<button class="btn btn-sm btn-outline-secondary close-fund-btn mt-1 w-100" disabled>
+              ? `<button class="btn btn-sm btn-success close-fund-btn mt-1 w-100" disabled>
                    <i class="fa fa-check"></i> Đã đóng quỹ tháng này
                  </button>`
               : `<button class="btn btn-sm btn-warning close-fund-btn mt-1 w-100"
@@ -1270,10 +1270,10 @@
             ${reg.dob ? `<div class="field field-keep"><i class="fas fa-birthday-cake"></i><strong>Ngày sinh:</strong> ${escapeHtml(reg.dob)}</div>` : ''}
             ${regFieldsHtml}
             ${attendanceTodaySet.has(normalize(reg.name))
-              ? `<button class="btn btn-sm btn-outline-secondary attendance-btn mt-2 w-100" disabled>
+              ? `<button class="btn btn-sm btn-success attendance-btn mt-2 w-100" disabled>
                    <i class="fa fa-check"></i> Đã điểm danh hôm nay
                  </button>`
-              : `<button class="btn btn-sm btn-success attendance-btn mt-2 w-100"
+              : `<button class="btn btn-sm btn-primary attendance-btn mt-2 w-100"
                        data-ho-ten="${escapeHtml(reg.name)}"
                        data-ma-hv=""
                        data-ngay-sinh="${escapeHtml(reg.dob || '')}"
@@ -1281,7 +1281,7 @@
                    <i class="fa fa-calendar-check"></i> Điểm danh hôm nay
                  </button>`}
             ${fundThisMonthSet.has(normalize(reg.name))
-              ? `<button class="btn btn-sm btn-outline-secondary close-fund-btn mt-1 w-100" disabled>
+              ? `<button class="btn btn-sm btn-success close-fund-btn mt-1 w-100" disabled>
                    <i class="fa fa-check"></i> Đã đóng quỹ tháng này
                  </button>`
               : `<button class="btn btn-sm btn-warning close-fund-btn mt-1 w-100"
@@ -1615,10 +1615,10 @@
       }
 
       if (result && result.success) {
-        $btn.removeClass('btn-warning').addClass('btn-outline-success')
+        $btn.removeClass('btn-warning').addClass('btn-success')
           .html('<i class="fa fa-check"></i> Đã đóng quỹ ' + thang);
       } else if (result && result.duplicate) {
-        $btn.removeClass('btn-warning').addClass('btn-outline-secondary')
+        $btn.removeClass('btn-warning').addClass('btn-success')
           .html('<i class="fa fa-check"></i> Đã đóng quỹ ' + thang);
         alert(result.error || `${hoTen} đã đóng quỹ tháng ${thang} rồi.`);
       } else {
@@ -1688,12 +1688,12 @@
       }
 
       if (result && result.success) {
-        // Visual feedback: change to "Đã điểm danh" with check icon
-        $btn.removeClass('btn-success').addClass('btn-outline-success')
+        // Visual feedback: change to "Đã điểm danh" with check icon (green)
+        $btn.removeClass('btn-primary').addClass('btn-success')
           .html('<i class="fa fa-check"></i> Đã điểm danh ' + dateStr);
       } else if (result && result.duplicate) {
-        // Already marked attendance today - show as already done
-        $btn.removeClass('btn-success').addClass('btn-outline-secondary')
+        // Already marked attendance today - show as already done (green)
+        $btn.removeClass('btn-primary').addClass('btn-success')
           .html('<i class="fa fa-check"></i> Đã điểm danh ' + dateStr);
         alert(result.error || 'Đã điểm danh rồi.');
       } else {
