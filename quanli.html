@@ -155,6 +155,28 @@
         .member-card.card-collapsed .field-section-title {
             display: none;
         }
+
+        /* "..." dropdown trigger button - larger and easier to click */
+        .member-card .multi-att-trigger {
+            min-width: 36px;
+            min-height: 36px;
+            padding: 6px 10px !important;
+            border-radius: 50%;
+            font-size: 1.25rem;
+            line-height: 1;
+            color: #555;
+            transition: background-color 0.15s, color 0.15s, transform 0.1s;
+        }
+        .member-card .multi-att-trigger:hover,
+        .member-card .multi-att-trigger:focus {
+            background-color: #e9ecef;
+            color: #33b5e5;
+            text-decoration: none;
+            transform: scale(1.05);
+        }
+        .member-card .multi-att-trigger:active {
+            transform: scale(0.95);
+        }
     </style>
 </head>
 
@@ -1338,7 +1360,7 @@
                             data-ma-hv="${escapeHtml(maHV)}"
                             data-ngay-sinh="${escapeHtml(ngaySinh)}"
                             data-cap-dai="${escapeHtml(updatedCapDai || capDai || '')}">
-                      <i class="fa fa-ellipsis-v"></i>
+                      <i class="fa fa-ellipsis-v fa-lg"></i>
                     </button>
                     <div class="dropdown-menu dropdown-menu-right">
                       <a class="dropdown-item multi-att-link" href="#" data-action="multi-attendance">
@@ -1411,7 +1433,7 @@
                         data-ma-hv=""
                         data-ngay-sinh="${escapeHtml(reg.dob || '')}"
                         data-cap-dai="">
-                  <i class="fa fa-ellipsis-v"></i>
+                  <i class="fa fa-ellipsis-v fa-lg"></i>
                 </button>
                 <div class="dropdown-menu dropdown-menu-right">
                   <a class="dropdown-item multi-att-link" href="#" data-action="multi-attendance">
