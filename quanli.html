@@ -118,6 +118,28 @@
             z-index: 100;
         }
 
+        /* Compact calendar day buttons (for mobile/iPhone) */
+        .cal-day-btn {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.1rem;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+        .cal-day-btn.btn-sm {
+            padding: 0.2rem 0.1rem;
+        }
+        #multiAttCalendar table {
+            table-layout: fixed;
+        }
+        #multiAttCalendar th,
+        #multiAttCalendar td {
+            padding: 0.15rem;
+            font-size: 0.75rem;
+        }
+        #multiAttCalendar th {
+            font-weight: 600;
+        }
+
         /* Collapsed card state - hide all fields except essential ones
            (name in h5.card-title, belt rank badge, "Đăng ký mới" badge, and DOB with .field-keep) */
         .member-card.card-collapsed .field:not(.field-keep),
@@ -1857,9 +1879,9 @@
     const personAttendance = attendanceByPersonMap.get(personKey) || new Set();
 
     let html = '<table class="table table-bordered table-sm mb-0 text-center"><thead><tr>';
-    html += '<th class="py-1">T2</th><th class="py-1">T3</th><th class="py-1">T4</th>';
-    html += '<th class="py-1">T5</th><th class="py-1">T6</th><th class="py-1">T7</th>';
-    html += '<th class="py-1">CN</th></tr></thead><tbody>';
+    html += '<th>T2</th><th>T3</th><th>T4</th>';
+    html += '<th>T5</th><th>T6</th><th>T7</th>';
+    html += '<th>CN</th></tr></thead><tbody>';
 
     let day = 1;
     let done = false;
@@ -1867,7 +1889,7 @@
       html += '<tr>';
       for (let dow = 0; dow < 7; dow++) {
         if ((week === 0 && dow < startDayOfWeek) || day > daysInMonth) {
-          html += '<td class="p-1"></td>';
+          html += '<td></td>';
         } else {
           const dd = String(day).padStart(2, '0');
           const mm = String(month + 1).padStart(2, '0');
@@ -1888,14 +1910,14 @@
           } else if (isAttended) {
             // Already attended - show green with checkmark, can't select
             cls = 'btn-success';
-            label = '✓ ' + day;
+            label = '✓' + day;
             title = dateStr + ' (đã điểm danh)';
             disabled = 'disabled';
           } else if (isSelected) {
             cls = 'btn-primary';
           }
 
-          html += '<td class="p-1"><button class="btn btn-sm ' + cls + ' w-100 cal-day-btn" ' +
+          html += '<td><button class="btn btn-sm ' + cls + ' w-100 cal-day-btn" ' +
                   'data-date="' + dateStr + '" ' + disabled + ' title="' + title + '">' + label + '</button></td>';
           day++;
         }
