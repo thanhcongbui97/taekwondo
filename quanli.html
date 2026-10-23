@@ -1939,18 +1939,6 @@
     $('#multiAttCalendar').html(html);
   }
 
-          html += '<td class="px-1"><button class="btn btn-sm ' + cls + ' w-100 cal-day-btn" ' +
-                  'data-date="' + dateStr + '" ' + disabled + ' title="' + title + '">' + label + '</button></td>';
-          day++;
-        }
-      }
-      html += '</tr>';
-      if (day > daysInMonth) done = true;
-    }
-    html += '</tbody></table>';
-    $('#multiAttCalendar').html(html);
-  }
-
   function updateMultiAttCount() {
     const count = multiAttState.selectedDates.size;
     $('#multiAttCount').text(count);
