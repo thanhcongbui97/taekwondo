@@ -1632,9 +1632,13 @@
       console.log('[closeFundForMember] result:', result);
 
       if (result && result.success) {
+        // Add to set so future card renders know this person already paid
+        fundThisMonthSet.add(normalize(hoTen));
         $btn.removeClass('btn-warning').addClass('btn-success')
           .html('<i class="fa fa-check"></i> Đã đóng quỹ ' + thang);
       } else if (result && result.duplicate) {
+        // Add to set (in case it wasn't there yet)
+        fundThisMonthSet.add(normalize(hoTen));
         $btn.removeClass('btn-warning').addClass('btn-success')
           .html('<i class="fa fa-check"></i> Đã đóng quỹ ' + thang);
         alert(result.error || `${hoTen} đã đóng quỹ tháng ${thang} rồi.`);
@@ -1736,10 +1740,14 @@
       console.log('[markAttendance] result:', result);
 
       if (result && result.success) {
+        // Add to set so future card renders know this person already attended
+        attendanceTodaySet.add(normalize(hoTen));
         // Visual feedback: change to "Đã điểm danh" with check icon (green)
         $btn.removeClass('btn-primary').addClass('btn-success')
           .html('<i class="fa fa-check"></i> Đã điểm danh ' + dateStr);
       } else if (result && result.duplicate) {
+        // Add to set (in case it wasn't there yet)
+        attendanceTodaySet.add(normalize(hoTen));
         // Already marked attendance today - show as already done (green)
         $btn.removeClass('btn-primary').addClass('btn-success')
           .html('<i class="fa fa-check"></i> Đã điểm danh ' + dateStr);
