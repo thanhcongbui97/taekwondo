@@ -118,6 +118,21 @@
             z-index: 100;
         }
 
+        /* Compact calendar day buttons (for mobile/iPhone) - reduce width only, keep height */
+        .cal-day-btn {
+            padding-left: 0.1rem;
+            padding-right: 0.1rem;
+            white-space: nowrap;
+        }
+        #multiAttCalendar table {
+            table-layout: fixed;
+        }
+        #multiAttCalendar th,
+        #multiAttCalendar td {
+            padding-left: 0.15rem;
+            padding-right: 0.15rem;
+        }
+
         /* Collapsed card state - hide all fields except essential ones
            (name in h5.card-title, belt rank badge, "Đăng ký mới" badge, and DOB with .field-keep) */
         .member-card.card-collapsed .field:not(.field-keep),
@@ -1895,7 +1910,7 @@
             cls = 'btn-primary';
           }
 
-          html += '<td class="p-1"><button class="btn btn-sm ' + cls + ' w-100 cal-day-btn" ' +
+          html += '<td class="px-1"><button class="btn btn-sm ' + cls + ' w-100 cal-day-btn" ' +
                   'data-date="' + dateStr + '" ' + disabled + ' title="' + title + '">' + label + '</button></td>';
           day++;
         }
