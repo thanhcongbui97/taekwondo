@@ -35,6 +35,9 @@ const BATCH_SIZE = 500;
 const ATTENDANCE_TAB_NAME = 'diemdanh';
 const ATTENDANCE_TAB_GID = 1395531960; // fallback if name lookup fails
 const ATTENDANCE_HEADERS = ['NGAY', 'TIMESTAMP', 'MA_HV', 'HO_TEN', 'NGAY_SINH', 'CAP_DAI', 'GHI_CHU'];
+const FUND_TAB_NAME = 'dongquy';
+const FUND_TAB_GID = 803125790; // fallback if name lookup fails
+const FUND_HEADERS = ['THANG', 'TIMESTAMP', 'SO_HV', 'GHI_CHU'];
 
 /**
  * Handle POST requests from the frontend.
@@ -51,6 +54,8 @@ function doPost(e) {
 
     if (action === 'attendance') {
       return handleAttendance(data);
+    } else if (action === 'closeFund') {
+      return handleCloseFund(data);
     } else {
       return handleExport(data);
     }
@@ -73,9 +78,10 @@ function doGet(e) {
     .createTextOutput(JSON.stringify({
       status: 'ok',
       message: 'Taekwondo PTIT endpoint is live. POST JSON to use.',
-      actions: ['export', 'attendance'],
+      actions: ['export', 'attendance', 'closeFund'],
       destinationSheetId: DESTINATION_SHEET_ID,
-      attendanceTab: ATTENDANCE_TAB_NAME
+      attendanceTab: ATTENDANCE_TAB_NAME,
+      fundTab: FUND_TAB_NAME
     }))
     .setMimeType(ContentService.MimeType.JSON);
 }
@@ -199,6 +205,60 @@ function handleAttendance(data) {
     .createTextOutput(JSON.stringify({
       success: true,
       action: 'attendance',
+      sheetName: sheet.getName(),
+      rowNumber: sheet.getLastRow()
+    }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * ACTION: closeFund
+ * Appends one row to the "dongquy" tab marking the current month as closed.
+ * Creates the tab + header if missing.
+ */
+function handleCloseFund(data) {
+  const ss = SpreadsheetApp.openById(DESTINATION_SHEET_ID);
+
+  // Find the dongquy tab by name first, then by gid, then fallback to 3rd sheet
+  let sheet = ss.getSheetByName(FUND_TAB_NAME);
+  if (!sheet) {
+    const sheets = ss.getSheets();
+    sheet = sheets.find(s => s.getSheetId() === FUND_TAB_GID);
+  }
+  if (!sheet && ss.getSheets().length > 2) {
+    sheet = ss.getSheets()[2]; // fallback to 3rd sheet
+  }
+  if (!sheet) {
+    sheet = ss.insertSheet(FUND_TAB_NAME);
+  }
+
+  // Write header if sheet is empty
+  if (sheet.getLastRow() === 0) {
+    sheet.getRange(1, 1, 1, FUND_HEADERS.length).setValues([FUND_HEADERS]);
+    const headerRange = sheet.getRange(1, 1, 1, FUND_HEADERS.length);
+    headerRange
+      .setFontWeight('bold')
+      .setBackground(HEADER_BG_COLOR)
+      .setFontColor(HEADER_TEXT_COLOR)
+      .setHorizontalAlignment('center');
+    sheet.setFrozenRows(1);
+  }
+
+  // Build fund row
+  const now = new Date();
+  const row = [
+    data.thang || Utilities.formatDate(now, Session.getScriptTimeZone(), 'MM/yyyy'),
+    data.timestamp || now.toISOString(),
+    data.soHV != null ? data.soHV : '',
+    data.ghiChu || ''
+  ];
+
+  sheet.appendRow(row);
+
+  return ContentService
+    .createTextOutput(JSON.stringify({
+      success: true,
+      action: 'closeFund',
       sheetName: sheet.getName(),
       rowNumber: sheet.getLastRow()
     }))

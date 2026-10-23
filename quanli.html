@@ -210,6 +210,9 @@
                           <button class="btn btn-outline-success" id="exportBtn" type="button" title="Ghi toàn bộ hội viên và hồ sơ đăng ký vào Google Sheet (ghi đè)">
                               <i class="fa fa-file-export ml-1"></i> Ghi vào Sheet
                           </button>
+                          <button class="btn btn-outline-warning" id="closeFundBtn" type="button" title="Đóng quỹ tháng hiện tại - ghi vào tab dongquy">
+                              <i class="fa fa-coins ml-1"></i> Đóng quỹ tháng
+                          </button>
                       </div>
                       <div class="text-center mt-4">
                           <small class="text-muted">Tìm kiếm theo tên và/hoặc năm sinh. Không phân biệt hoa/thường, không cần nhập đầy đủ tên.</small>
@@ -469,6 +472,7 @@
     const $reloadBtn = $('#reloadBtn');
     const $collapseBtn = $('#collapseBtn');
     const $exportBtn = $('#exportBtn');
+    const $closeFundBtn = $('#closeFundBtn');
     const $loading = $('#loading');
     const $loadingBar = $('#loadingBar');
     const $loadingPercent = $('#loadingPercent');
@@ -1438,6 +1442,74 @@
   }
 
   $exportBtn.on('click', exportToSheet);
+
+  // ===== Close monthly fund (đóng quỹ tháng) =====
+  // Writes one row to the "dongquy" tab marking the current month as closed.
+  async function closeFund() {
+    if (!EXPORT_SCRIPT_URL) {
+      alert('Chưa cấu hình EXPORT_SCRIPT_URL. Xem hướng dẫn trong nút "Ghi vào Sheet".');
+      return;
+    }
+    if (isLoading) {
+      alert('Dữ liệu đang được tải, vui lòng đợi.');
+      return;
+    }
+
+    const now = new Date();
+    const thang = String(now.getMonth() + 1).padStart(2, '0') + '/' + now.getFullYear();
+    const soHV = allRows.length;
+
+    if (!confirm(`Đóng quỹ tháng ${thang}?\n\n` +
+                 `Sẽ ghi 1 dòng vào tab "dongquy" với:\n` +
+                 `• Tháng: ${thang}\n` +
+                 `• Số hội viên hiện tại: ${soHV}\n` +
+                 `• Thời gian: ${now.toLocaleString('vi-VN')}\n\n` +
+                 `Tiếp tục?`)) {
+      return;
+    }
+
+    $closeFundBtn.prop('disabled', true)
+      .html('<i class="fa fa-spinner fa-spin ml-1"></i> Đang ghi...');
+
+    try {
+      const response = await fetch(EXPORT_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'closeFund',
+          thang: thang,
+          timestamp: now.toISOString(),
+          soHV: soHV,
+          ghiChu: ''
+        }),
+        redirect: 'follow'
+      });
+
+      let result;
+      try {
+        result = await response.json();
+      } catch (parseErr) {
+        throw new Error('Phản hồi không hợp lệ từ Apps Script.');
+      }
+
+      if (result && result.success) {
+        $closeFundBtn.removeClass('btn-outline-warning').addClass('btn-outline-success')
+          .html('<i class="fa fa-check ml-1"></i> Đã đóng quỹ ' + thang);
+        alert(`Đã đóng quỹ tháng ${thang} thành công!\n\n` +
+              `Tab: dongquy (dòng ${result.rowNumber})\n\n` +
+              `Sheet: https://docs.google.com/spreadsheets/d/${EXPORT_SHEET_ID}`);
+      } else {
+        throw new Error((result && result.error) || 'Lỗi không xác định');
+      }
+    } catch (err) {
+      alert('Lỗi khi đóng quỹ: ' + err.message);
+      $closeFundBtn.prop('disabled', false)
+        .html('<i class="fa fa-coins ml-1"></i> Đóng quỹ tháng');
+      console.error('Close fund error:', err);
+    }
+  }
+
+  $closeFundBtn.on('click', closeFund);
 
   // ===== Attendance (điểm danh) =====
   // Click handler for the "Điểm danh hôm nay" button inside each member card.
