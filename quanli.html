@@ -118,19 +118,32 @@
             z-index: 100;
         }
 
-        /* Compact calendar day buttons (for mobile/iPhone) - reduce width only, keep height */
+        /* Compact calendar day buttons (for mobile/iPhone) - flex layout, equal-width columns */
+        #multiAttCalendar {
+            width: 100%;
+        }
+        .cal-week {
+            display: flex;
+            gap: 1px;
+            margin-bottom: 1px;
+        }
+        .cal-day {
+            flex: 1 1 0;
+            min-width: 0;
+            text-align: center;
+        }
         .cal-day-btn {
+            width: 100%;
             padding-left: 0;
             padding-right: 0;
             white-space: nowrap;
+            font-size: 0.875rem;
         }
-        #multiAttCalendar table {
-            table-layout: fixed;
-        }
-        #multiAttCalendar th,
-        #multiAttCalendar td {
-            padding-left: 0;
-            padding-right: 0;
+        .cal-day-header {
+            font-weight: 600;
+            font-size: 0.75rem;
+            padding: 0.25rem 0;
+            color: #666;
         }
 
         /* Collapsed card state - hide all fields except essential ones
@@ -1871,18 +1884,23 @@
     const personKey = normalize(multiAttState.hoTen);
     const personAttendance = attendanceByPersonMap.get(personKey) || new Set();
 
-    let html = '<table class="table table-bordered table-sm mb-0 text-center"><thead><tr>';
-    html += '<th class="py-1">T2</th><th class="py-1">T3</th><th class="py-1">T4</th>';
-    html += '<th class="py-1">T5</th><th class="py-1">T6</th><th class="py-1">T7</th>';
-    html += '<th class="py-1">CN</th></tr></thead><tbody>';
+    let html = '<div class="cal-week cal-header-row">';
+    html += '<div class="cal-day cal-day-header">T2</div>';
+    html += '<div class="cal-day cal-day-header">T3</div>';
+    html += '<div class="cal-day cal-day-header">T4</div>';
+    html += '<div class="cal-day cal-day-header">T5</div>';
+    html += '<div class="cal-day cal-day-header">T6</div>';
+    html += '<div class="cal-day cal-day-header">T7</div>';
+    html += '<div class="cal-day cal-day-header">CN</div>';
+    html += '</div>';
 
     let day = 1;
     let done = false;
     for (let week = 0; week < 6 && !done; week++) {
-      html += '<tr>';
+      html += '<div class="cal-week">';
       for (let dow = 0; dow < 7; dow++) {
         if ((week === 0 && dow < startDayOfWeek) || day > daysInMonth) {
-          html += '<td class="p-1"></td>';
+          html += '<div class="cal-day"></div>';
         } else {
           const dd = String(day).padStart(2, '0');
           const mm = String(month + 1).padStart(2, '0');
@@ -1909,6 +1927,17 @@
           } else if (isSelected) {
             cls = 'btn-primary';
           }
+
+          html += '<div class="cal-day"><button class="btn btn-sm ' + cls + ' cal-day-btn" ' +
+                  'data-date="' + dateStr + '" ' + disabled + ' title="' + title + '">' + label + '</button></div>';
+          day++;
+        }
+      }
+      html += '</div>';
+      if (day > daysInMonth) done = true;
+    }
+    $('#multiAttCalendar').html(html);
+  }
 
           html += '<td class="px-1"><button class="btn btn-sm ' + cls + ' w-100 cal-day-btn" ' +
                   'data-date="' + dateStr + '" ' + disabled + ' title="' + title + '">' + label + '</button></td>';
