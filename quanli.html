@@ -507,6 +507,7 @@
   let isLoading = false;           // true while loadData() is in progress
   let isCollapsed = false;         // true when cards are collapsed (only show name, DOB, belt rank)
   let attendanceTodaySet = new Set();  // normalized names who already attended today
+  let attendanceByPersonMap = new Map(); // normalized name -> Set of "dd/mm/yyyy" dates attended
   let fundThisMonthSet = new Set();    // normalized names who already paid fund this month
 
   // ===== DOM refs =====
@@ -981,12 +982,21 @@
         // gviz returns dates as "Date(YYYY,M,D)" - use formatDate() to normalize to dd/mm/yyyy
         const ngay = formatDate(getCellValue(row, 0));
         const hoTen = String(getCellValue(row, 3) || '').trim();
-        if (ngay === today && hoTen) {
-          attendanceTodaySet.add(normalize(hoTen));
+        if (ngay && hoTen) {
+          const key = normalize(hoTen);
+          // Track all attended dates per person (for multi-day calendar)
+          if (!attendanceByPersonMap.has(key)) {
+            attendanceByPersonMap.set(key, new Set());
+          }
+          attendanceByPersonMap.get(key).add(ngay);
+          // Also track today's attendance (for single-day button disable)
+          if (ngay === today) {
+            attendanceTodaySet.add(key);
+          }
         }
       });
       console.log('[loadStatus] attendanceTodaySet size:', attendanceTodaySet.size,
-                  '| sample:', Array.from(attendanceTodaySet).slice(0, 5));
+                  '| attendanceByPersonMap size:', attendanceByPersonMap.size);
     } catch (err) {
       console.warn('[loadStatus] Không tải được trạng thái điểm danh:', err);
     }
@@ -1786,6 +1796,10 @@
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    // Get this person's attendance dates (for disabling already-attended days)
+    const personKey = normalize(multiAttState.hoTen);
+    const personAttendance = attendanceByPersonMap.get(personKey) || new Set();
+
     let html = '<table class="table table-bordered table-sm mb-0 text-center"><thead><tr>';
     html += '<th class="py-1">T2</th><th class="py-1">T3</th><th class="py-1">T4</th>';
     html += '<th class="py-1">T5</th><th class="py-1">T6</th><th class="py-1">T7</th>';
@@ -1803,16 +1817,30 @@
           const mm = String(month + 1).padStart(2, '0');
           const dateStr = dd + '/' + mm + '/' + year;
           const isSelected = multiAttState.selectedDates.has(dateStr);
+          const isAttended = personAttendance.has(dateStr);
           const cellDate = new Date(year, month, day);
           const isFuture = cellDate > today;
 
           let cls = 'btn-outline-secondary';
-          if (isFuture) cls = 'btn-light text-muted';
-          else if (isSelected) cls = 'btn-primary';
+          let label = String(day);
+          let title = dateStr;
+          let disabled = '';
 
-          const disabled = isFuture ? 'disabled' : '';
+          if (isFuture) {
+            cls = 'btn-light text-muted';
+            disabled = 'disabled';
+          } else if (isAttended) {
+            // Already attended - show green with checkmark, can't select
+            cls = 'btn-success';
+            label = '✓ ' + day;
+            title = dateStr + ' (đã điểm danh)';
+            disabled = 'disabled';
+          } else if (isSelected) {
+            cls = 'btn-primary';
+          }
+
           html += '<td class="p-1"><button class="btn btn-sm ' + cls + ' w-100 cal-day-btn" ' +
-                  'data-date="' + dateStr + '" ' + disabled + '>' + day + '</button></td>';
+                  'data-date="' + dateStr + '" ' + disabled + ' title="' + title + '">' + label + '</button></td>';
           day++;
         }
       }
@@ -1947,8 +1975,13 @@
       console.log('[multiAtt] result:', result);
 
       if (result && result.success) {
-        // Add all written dates to the set so future renders stay disabled
-        (result.written || []).forEach(d => attendanceTodaySet.add(normalize(multiAttState.hoTen) + '|' + d));
+        // Add all written dates to the per-person map so calendar stays accurate
+        const personKey = normalize(multiAttState.hoTen);
+        if (!attendanceByPersonMap.has(personKey)) {
+          attendanceByPersonMap.set(personKey, new Set());
+        }
+        const personSet = attendanceByPersonMap.get(personKey);
+        (result.written || []).forEach(d => personSet.add(d));
 
         let msg = 'Đã điểm danh ' + result.writtenCount + ' ngày cho ' + multiAttState.hoTen + '.';
         if (result.duplicateCount > 0) {
@@ -1962,7 +1995,7 @@
         // Update the single-day attendance button if today was among the written dates
         const today = new Date().toLocaleDateString('vi-VN');
         if ((result.written || []).includes(today)) {
-          attendanceTodaySet.add(normalize(multiAttState.hoTen));
+          attendanceTodaySet.add(personKey);
           updateButtonStates();
         }
 
@@ -2068,7 +2101,10 @@
 
       if (result && result.success) {
         // Add to set so future card renders know this person already attended
-        attendanceTodaySet.add(normalize(hoTen));
+        const key = normalize(hoTen);
+        attendanceTodaySet.add(key);
+        if (!attendanceByPersonMap.has(key)) attendanceByPersonMap.set(key, new Set());
+        attendanceByPersonMap.get(key).add(dateStr);
         // Visual feedback: change to "Đã điểm danh" with check icon (green)
         $btn.removeClass('btn-primary').addClass('btn-success')
           .html('<i class="fa fa-check"></i> Đã điểm danh ' + dateStr);
@@ -2078,7 +2114,10 @@
         }
       } else if (result && result.duplicate) {
         // Add to set (in case it wasn't there yet)
-        attendanceTodaySet.add(normalize(hoTen));
+        const key = normalize(hoTen);
+        attendanceTodaySet.add(key);
+        if (!attendanceByPersonMap.has(key)) attendanceByPersonMap.set(key, new Set());
+        attendanceByPersonMap.get(key).add(dateStr);
         // Already marked attendance today - show as already done (green)
         $btn.removeClass('btn-primary').addClass('btn-success')
           .html('<i class="fa fa-check"></i> Đã điểm danh ' + dateStr);
