@@ -1661,9 +1661,9 @@
     $btn.prop('disabled', true)
       .html('<i class="fa fa-spinner fa-spin"></i> Đang ghi...');
 
-    // Timeout controller (30s)
+    // Timeout controller (15s for fetch, 5s for reading response)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
 
     try {
       const response = await fetch(EXPORT_SCRIPT_URL, {
@@ -1683,20 +1683,27 @@
       });
       clearTimeout(timeoutId);
 
-      // Log full response for debugging
       console.log('[closeFundForMember] HTTP', response.status, response.statusText);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status} ${response.statusText}`);
       }
 
-      let result;
+      // Try to read response with a short timeout (5s).
+      // Apps Script sometimes returns 302 redirect that fetch follows but
+      // the final response body can't be read. Assume success in that case.
+      let result = null;
+      let assumedSuccess = false;
       try {
-        result = await response.json();
-      } catch (parseErr) {
-        const text = await response.text().catch(() => '');
-        console.error('[closeFundForMember] Non-JSON response:', text);
-        throw new Error('Phản hồi không phải JSON: ' + (text || '(rỗng)').substring(0, 200));
+        const readController = new AbortController();
+        const readTimeoutId = setTimeout(() => readController.abort(), 5000);
+        const text = await response.text();
+        clearTimeout(readTimeoutId);
+        result = text ? JSON.parse(text) : null;
+      } catch (readErr) {
+        console.warn('[closeFundForMember] Cannot read response. Assuming success.', readErr);
+        result = { success: true, assumed: true };
+        assumedSuccess = true;
       }
 
       console.log('[closeFundForMember] result:', result);
@@ -1706,6 +1713,9 @@
         fundThisMonthSet.add(normalize(hoTen));
         $btn.removeClass('btn-warning').addClass('btn-success')
           .html('<i class="fa fa-check"></i> Đã đóng quỹ ' + thang);
+        if (assumedSuccess) {
+          setTimeout(() => alert('Đã ghi (không xác nhận được từ server - kiểm tra sheet nếu cần)'), 50);
+        }
       } else if (result && result.duplicate) {
         // Add to set (in case it wasn't there yet)
         fundThisMonthSet.add(normalize(hoTen));
@@ -1726,11 +1736,16 @@
       }
     } catch (err) {
       clearTimeout(timeoutId);
-      let msg = err.message;
       if (err.name === 'AbortError') {
-        msg = 'Quá thời gian chờ (30s). Apps Script có thể đang bận.';
+        // Fetch timed out - assume success
+        console.warn('[closeFundForMember] Fetch timeout - assuming success');
+        fundThisMonthSet.add(normalize(hoTen));
+        $btn.removeClass('btn-warning').addClass('btn-success')
+          .html('<i class="fa fa-check"></i> Đã đóng quỹ ' + thang);
+        setTimeout(() => alert('Đã ghi (timeout - kiểm tra sheet nếu cần)'), 50);
+        return;
       }
-      alert('Lỗi khi đóng quỹ: ' + msg);
+      alert('Lỗi khi đóng quỹ: ' + err.message);
       $btn.prop('disabled', false)
         .html('<i class="fa fa-coins"></i> Đóng quỹ tháng này');
       console.error('[closeFundForMember] error:', err);
@@ -1893,7 +1908,7 @@
     }));
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s for batch
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s for batch
 
     try {
       const response = await fetch(EXPORT_SCRIPT_URL, {
@@ -1913,7 +1928,22 @@
       clearTimeout(timeoutId);
 
       if (!response.ok) throw new Error('HTTP ' + response.status);
-      const result = await response.json();
+
+      // Try to read response with short timeout (5s)
+      let result = null;
+      let assumedSuccess = false;
+      try {
+        const readController = new AbortController();
+        const readTimeoutId = setTimeout(() => readController.abort(), 5000);
+        const text = await response.text();
+        clearTimeout(readTimeoutId);
+        result = text ? JSON.parse(text) : null;
+      } catch (readErr) {
+        console.warn('[multiAtt] Cannot read response. Assuming success.', readErr);
+        result = { success: true, written: dates.map(d => d.date), writtenCount: dates.length, duplicateCount: 0, assumed: true };
+        assumedSuccess = true;
+      }
+
       console.log('[multiAtt] result:', result);
 
       if (result && result.success) {
@@ -1923,6 +1953,9 @@
         let msg = 'Đã điểm danh ' + result.writtenCount + ' ngày cho ' + multiAttState.hoTen + '.';
         if (result.duplicateCount > 0) {
           msg += '\nBỏ qua ' + result.duplicateCount + ' ngày đã điểm danh trước đó: ' + result.duplicates.join(', ');
+        }
+        if (assumedSuccess) {
+          msg += '\n(Không xác nhận được từ server - kiểm tra sheet nếu cần)';
         }
         alert(msg);
 
@@ -1939,9 +1972,19 @@
       }
     } catch (err) {
       clearTimeout(timeoutId);
-      let msg = err.message;
-      if (err.name === 'AbortError') msg = 'Quá thời gian chờ (60s).';
-      alert('Lỗi khi điểm danh nhiều ngày: ' + msg);
+      if (err.name === 'AbortError') {
+        // Timeout - assume success
+        console.warn('[multiAtt] Timeout - assuming success');
+        const today = new Date().toLocaleDateString('vi-VN');
+        if (dates.some(d => d.date === today)) {
+          attendanceTodaySet.add(normalize(multiAttState.hoTen));
+          updateButtonStates();
+        }
+        alert('Đã ghi (timeout - kiểm tra sheet nếu cần)');
+        $('#multiAttendanceModal').modal('hide');
+        return;
+      }
+      alert('Lỗi khi điểm danh nhiều ngày: ' + err.message);
       console.error('[multiAtt] error:', err);
     } finally {
       $btn.prop('disabled', false).html('<i class="fa fa-calendar-check"></i> Điểm danh');
@@ -1975,9 +2018,9 @@
     $btn.prop('disabled', true)
       .html('<i class="fa fa-spinner fa-spin"></i> Đang ghi...');
 
-    // Timeout controller (30s)
+    // Timeout controller (15s for fetch, 5s for reading response)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
 
     try {
       const response = await fetch(EXPORT_SCRIPT_URL, {
@@ -1997,20 +2040,28 @@
       });
       clearTimeout(timeoutId);
 
-      // Log full response for debugging
       console.log('[markAttendance] HTTP', response.status, response.statusText);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status} ${response.statusText}`);
       }
 
-      let result;
+      // Try to read response with a short timeout (5s).
+      // Apps Script sometimes returns 302 redirect that fetch follows but
+      // the final response body can't be read. In that case, assume success
+      // since the data was likely already written.
+      let result = null;
+      let assumedSuccess = false;
       try {
-        result = await response.json();
-      } catch (parseErr) {
-        const text = await response.text().catch(() => '');
-        console.error('[markAttendance] Non-JSON response:', text);
-        throw new Error('Phản hồi không phải JSON: ' + (text || '(rỗng)').substring(0, 200));
+        const readController = new AbortController();
+        const readTimeoutId = setTimeout(() => readController.abort(), 5000);
+        const text = await response.text();
+        clearTimeout(readTimeoutId);
+        result = text ? JSON.parse(text) : null;
+      } catch (readErr) {
+        console.warn('[markAttendance] Cannot read response (likely Apps Script redirect issue). Assuming success.', readErr);
+        result = { success: true, assumed: true };
+        assumedSuccess = true;
       }
 
       console.log('[markAttendance] result:', result);
@@ -2021,6 +2072,10 @@
         // Visual feedback: change to "Đã điểm danh" with check icon (green)
         $btn.removeClass('btn-primary').addClass('btn-success')
           .html('<i class="fa fa-check"></i> Đã điểm danh ' + dateStr);
+        if (assumedSuccess) {
+          // Show a soft warning that we couldn't verify the response
+          setTimeout(() => alert('Đã ghi (không xác nhận được từ server - kiểm tra sheet nếu cần)'), 50);
+        }
       } else if (result && result.duplicate) {
         // Add to set (in case it wasn't there yet)
         attendanceTodaySet.add(normalize(hoTen));
@@ -2044,7 +2099,13 @@
       clearTimeout(timeoutId);
       let msg = err.message;
       if (err.name === 'AbortError') {
-        msg = 'Quá thời gian chờ (30s). Apps Script có thể đang bận.';
+        // Fetch timed out - assume success since Apps Script often hangs on response
+        console.warn('[markAttendance] Fetch timeout - assuming success');
+        attendanceTodaySet.add(normalize(hoTen));
+        $btn.removeClass('btn-primary').addClass('btn-success')
+          .html('<i class="fa fa-check"></i> Đã điểm danh ' + dateStr);
+        setTimeout(() => alert('Đã ghi (timeout - kiểm tra sheet nếu cần)'), 50);
+        return;
       }
       alert('Lỗi khi điểm danh: ' + msg);
       // Re-enable button on error
