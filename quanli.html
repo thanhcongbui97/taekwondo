@@ -245,6 +245,42 @@
 
   <my-footer></my-footer>
 
+  <!-- Multi-attendance modal -->
+  <div class="modal fade" id="multiAttendanceModal" tabindex="-1" role="dialog" aria-labelledby="multiAttTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="multiAttTitle">Điểm danh nhiều ngày cho <span id="multiAttHoTen"></span></h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <button class="btn btn-sm btn-outline-secondary" id="multiAttPrevMonth" type="button">
+              <i class="fa fa-chevron-left"></i> Tháng trước
+            </button>
+            <h6 class="mb-0 font-weight-bold" id="multiAttMonthLabel"></h6>
+            <button class="btn btn-sm btn-outline-secondary" id="multiAttNextMonth" type="button">
+              Tháng sau <i class="fa fa-chevron-right"></i>
+            </button>
+          </div>
+          <div id="multiAttCalendar"></div>
+          <div class="mt-3 p-2 bg-light rounded">
+            <strong>Đã chọn: <span id="multiAttCount" class="text-primary">0</span> ngày</strong>
+            <div id="multiAttSelectedList" class="mt-1 small text-muted"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+          <button type="button" class="btn btn-primary" id="multiAttSubmit">
+            <i class="fa fa-calendar-check"></i> Điểm danh
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- SCRIPTS -->
   <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
   <script type="text/javascript" src="js/popper.min.js"></script>
@@ -1209,9 +1245,26 @@
         <div class="col-md-6 col-lg-4 mb-4">
             <div class="card member-card h-100${bcnEntries.length > 0 ? ' member-card-bcn' : ''}">
               <div class="card-body">
-                <h5 class="card-title mb-1">
-                  <i class="fas fa-user"></i> ${escapeHtml(hoTen) || '(chưa có tên)'}
-                </h5>
+                <div class="d-flex justify-content-between align-items-start">
+                  <h5 class="card-title mb-1 flex-grow-1">
+                    <i class="fas fa-user"></i> ${escapeHtml(hoTen) || '(chưa có tên)'}
+                  </h5>
+                  <div class="dropdown ml-2">
+                    <button class="btn btn-sm btn-link text-secondary p-0 multi-att-trigger"
+                            type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                            data-ho-ten="${escapeHtml(hoTen)}"
+                            data-ma-hv="${escapeHtml(maHV)}"
+                            data-ngay-sinh="${escapeHtml(ngaySinh)}"
+                            data-cap-dai="${escapeHtml(updatedCapDai || capDai || '')}">
+                      <i class="fa fa-ellipsis-v"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right">
+                      <a class="dropdown-item multi-att-link" href="#" data-action="multi-attendance">
+                        <i class="fa fa-calendar-plus"></i> Điểm danh nhiều ngày
+                      </a>
+                    </div>
+                  </div>
+                </div>
               ${bcnTagsHtml}
               ${ntntTagsHtml}
                 ${updatedCapDai ? renderBelt(updatedCapDai) : ''}
@@ -1262,9 +1315,26 @@
       <div class="col-md-6 col-lg-4 mb-4">
         <div class="card member-card h-100 member-card-registration">
           <div class="card-body">
-            <h5 class="card-title mb-1">
-              <i class="fas fa-user-plus"></i> ${escapeHtml(reg.name) || '(chưa có tên)'}
-            </h5>
+            <div class="d-flex justify-content-between align-items-start">
+              <h5 class="card-title mb-1 flex-grow-1">
+                <i class="fas fa-user-plus"></i> ${escapeHtml(reg.name) || '(chưa có tên)'}
+              </h5>
+              <div class="dropdown ml-2">
+                <button class="btn btn-sm btn-link text-secondary p-0 multi-att-trigger"
+                        type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                        data-ho-ten="${escapeHtml(reg.name)}"
+                        data-ma-hv=""
+                        data-ngay-sinh="${escapeHtml(reg.dob || '')}"
+                        data-cap-dai="">
+                  <i class="fa fa-ellipsis-v"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-right">
+                  <a class="dropdown-item multi-att-link" href="#" data-action="multi-attendance">
+                    <i class="fa fa-calendar-plus"></i> Điểm danh nhiều ngày
+                  </a>
+                </div>
+              </div>
+            </div>
             <span class="badge badge-warning mb-2"><i class="fas fa-clock"></i> Đăng ký mới</span>
             <hr class="my-2">
             ${reg.dob ? `<div class="field field-keep"><i class="fas fa-birthday-cake"></i><strong>Ngày sinh:</strong> ${escapeHtml(reg.dob)}</div>` : ''}
@@ -1670,6 +1740,212 @@
   // Event delegation for close-fund buttons
   $results.on('click', '.close-fund-btn', function () {
     closeFundForMember($(this));
+  });
+
+  // ===== Multi-day attendance (điểm danh nhiều ngày) =====
+  // Opens a modal with a calendar grid. User clicks days to select/deselect,
+  // then submits to write all selected dates at once.
+  const multiAttState = {
+    hoTen: '',
+    maHV: '',
+    ngaySinh: '',
+    capDai: '',
+    viewYear: 0,
+    viewMonth: 0, // 0-indexed
+    selectedDates: new Set() // set of "dd/mm/yyyy" strings
+  };
+
+  function renderMultiAttCalendar() {
+    const year = multiAttState.viewYear;
+    const month = multiAttState.viewMonth;
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    // Monday = 0, Sunday = 6
+    const startDayOfWeek = (firstDay.getDay() + 6) % 7;
+
+    const monthNames = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6',
+                        'Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+    $('#multiAttMonthLabel').text(monthNames[month] + ' / ' + year);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let html = '<table class="table table-bordered table-sm mb-0 text-center"><thead><tr>';
+    html += '<th class="py-1">T2</th><th class="py-1">T3</th><th class="py-1">T4</th>';
+    html += '<th class="py-1">T5</th><th class="py-1">T6</th><th class="py-1">T7</th>';
+    html += '<th class="py-1">CN</th></tr></thead><tbody>';
+
+    let day = 1;
+    let done = false;
+    for (let week = 0; week < 6 && !done; week++) {
+      html += '<tr>';
+      for (let dow = 0; dow < 7; dow++) {
+        if ((week === 0 && dow < startDayOfWeek) || day > daysInMonth) {
+          html += '<td class="p-1"></td>';
+        } else {
+          const dd = String(day).padStart(2, '0');
+          const mm = String(month + 1).padStart(2, '0');
+          const dateStr = dd + '/' + mm + '/' + year;
+          const isSelected = multiAttState.selectedDates.has(dateStr);
+          const cellDate = new Date(year, month, day);
+          const isFuture = cellDate > today;
+
+          let cls = 'btn-outline-secondary';
+          if (isFuture) cls = 'btn-light text-muted';
+          else if (isSelected) cls = 'btn-primary';
+
+          const disabled = isFuture ? 'disabled' : '';
+          html += '<td class="p-1"><button class="btn btn-sm ' + cls + ' w-100 cal-day-btn" ' +
+                  'data-date="' + dateStr + '" ' + disabled + '>' + day + '</button></td>';
+          day++;
+        }
+      }
+      html += '</tr>';
+      if (day > daysInMonth) done = true;
+    }
+    html += '</tbody></table>';
+    $('#multiAttCalendar').html(html);
+  }
+
+  function updateMultiAttCount() {
+    const count = multiAttState.selectedDates.size;
+    $('#multiAttCount').text(count);
+    if (count > 0) {
+      const sorted = Array.from(multiAttState.selectedDates).sort();
+      $('#multiAttSelectedList').text(sorted.join(', '));
+    } else {
+      $('#multiAttSelectedList').text('(chưa chọn ngày nào)');
+    }
+  }
+
+  function openMultiAttendanceModal($trigger) {
+    multiAttState.hoTen = $trigger.data('ho-ten') || '';
+    multiAttState.maHV = $trigger.data('ma-hv') || '';
+    multiAttState.ngaySinh = $trigger.data('ngay-sinh') || '';
+    multiAttState.capDai = $trigger.data('cap-dai') || '';
+    multiAttState.selectedDates = new Set();
+
+    const now = new Date();
+    multiAttState.viewYear = now.getFullYear();
+    multiAttState.viewMonth = now.getMonth();
+
+    $('#multiAttHoTen').text(multiAttState.hoTen);
+    renderMultiAttCalendar();
+    updateMultiAttCount();
+    $('#multiAttendanceModal').modal('show');
+  }
+
+  // Event delegation: open modal when clicking dropdown item
+  $results.on('click', '.multi-att-link', function (e) {
+    e.preventDefault();
+    const $trigger = $(this).closest('.dropdown').find('.multi-att-trigger');
+    openMultiAttendanceModal($trigger);
+  });
+
+  // Calendar day click
+  $('#multiAttCalendar').on('click', '.cal-day-btn:not([disabled])', function () {
+    const dateStr = $(this).data('date');
+    if (multiAttState.selectedDates.has(dateStr)) {
+      multiAttState.selectedDates.delete(dateStr);
+    } else {
+      multiAttState.selectedDates.add(dateStr);
+    }
+    renderMultiAttCalendar();
+    updateMultiAttCount();
+  });
+
+  // Month navigation
+  $('#multiAttPrevMonth').on('click', function () {
+    multiAttState.viewMonth--;
+    if (multiAttState.viewMonth < 0) {
+      multiAttState.viewMonth = 11;
+      multiAttState.viewYear--;
+    }
+    renderMultiAttCalendar();
+  });
+  $('#multiAttNextMonth').on('click', function () {
+    multiAttState.viewMonth++;
+    if (multiAttState.viewMonth > 11) {
+      multiAttState.viewMonth = 0;
+      multiAttState.viewYear++;
+    }
+    renderMultiAttCalendar();
+  });
+
+  // Submit multi-attendance
+  $('#multiAttSubmit').on('click', async function () {
+    if (multiAttState.selectedDates.size === 0) {
+      alert('Vui lòng chọn ít nhất 1 ngày.');
+      return;
+    }
+    if (!EXPORT_SCRIPT_URL) {
+      alert('Chưa cấu hình EXPORT_SCRIPT_URL.');
+      return;
+    }
+
+    const $btn = $(this);
+    $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Đang ghi...');
+
+    const dates = Array.from(multiAttState.selectedDates).sort().map(d => ({
+      date: d,
+      timestamp: new Date(d.split('/').reverse().join('-') + 'T08:00:00').toISOString()
+    }));
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s for batch
+
+    try {
+      const response = await fetch(EXPORT_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'attendanceMultiple',
+          maHV: multiAttState.maHV,
+          hoTen: multiAttState.hoTen,
+          ngaySinh: multiAttState.ngaySinh,
+          capDai: multiAttState.capDai,
+          dates: dates
+        }),
+        redirect: 'follow',
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const result = await response.json();
+      console.log('[multiAtt] result:', result);
+
+      if (result && result.success) {
+        // Add all written dates to the set so future renders stay disabled
+        (result.written || []).forEach(d => attendanceTodaySet.add(normalize(multiAttState.hoTen) + '|' + d));
+
+        let msg = 'Đã điểm danh ' + result.writtenCount + ' ngày cho ' + multiAttState.hoTen + '.';
+        if (result.duplicateCount > 0) {
+          msg += '\nBỏ qua ' + result.duplicateCount + ' ngày đã điểm danh trước đó: ' + result.duplicates.join(', ');
+        }
+        alert(msg);
+
+        // Update the single-day attendance button if today was among the written dates
+        const today = new Date().toLocaleDateString('vi-VN');
+        if ((result.written || []).includes(today)) {
+          attendanceTodaySet.add(normalize(multiAttState.hoTen));
+          updateButtonStates();
+        }
+
+        $('#multiAttendanceModal').modal('hide');
+      } else {
+        throw new Error((result && result.error) || 'Lỗi không xác định');
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+      let msg = err.message;
+      if (err.name === 'AbortError') msg = 'Quá thời gian chờ (60s).';
+      alert('Lỗi khi điểm danh nhiều ngày: ' + msg);
+      console.error('[multiAtt] error:', err);
+    } finally {
+      $btn.prop('disabled', false).html('<i class="fa fa-calendar-check"></i> Điểm danh');
+    }
   });
 
   // ===== Attendance (điểm danh) =====

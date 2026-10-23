@@ -54,6 +54,8 @@ function doPost(e) {
 
     if (action === 'attendance') {
       return handleAttendance(data);
+    } else if (action === 'attendanceMultiple') {
+      return handleAttendanceMultiple(data);
     } else if (action === 'closeFund') {
       return handleCloseFund(data);
     } else {
@@ -78,7 +80,7 @@ function doGet(e) {
     .createTextOutput(JSON.stringify({
       status: 'ok',
       message: 'Taekwondo PTIT endpoint is live. POST JSON to use.',
-      actions: ['export', 'attendance', 'closeFund'],
+      actions: ['export', 'attendance', 'attendanceMultiple', 'closeFund'],
       destinationSheetId: DESTINATION_SHEET_ID,
       attendanceTab: ATTENDANCE_TAB_NAME,
       fundTab: FUND_TAB_NAME
@@ -235,6 +237,105 @@ function handleAttendance(data) {
       action: 'attendance',
       sheetName: sheet.getName(),
       rowNumber: sheet.getLastRow()
+    }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * ACTION: attendanceMultiple
+ * Appends multiple rows to the "diemdanh" tab for a specific member.
+ * Each date is checked individually for duplicates.
+ * Body: { maHV, hoTen, ngaySinh, capDai, dates: [{date, timestamp}, ...] }
+ * Returns: { success, written: [dates], duplicates: [dates], writtenCount, duplicateCount }
+ */
+function handleAttendanceMultiple(data) {
+  const ss = SpreadsheetApp.openById(DESTINATION_SHEET_ID);
+
+  // Find the diemdanh tab
+  let sheet = ss.getSheetByName(ATTENDANCE_TAB_NAME);
+  if (!sheet) {
+    const sheets = ss.getSheets();
+    sheet = sheets.find(s => s.getSheetId() === ATTENDANCE_TAB_GID);
+  }
+  if (!sheet && ss.getSheets().length > 1) {
+    sheet = ss.getSheets()[1];
+  }
+  if (!sheet) {
+    sheet = ss.insertSheet(ATTENDANCE_TAB_NAME);
+  }
+
+  // Write header if sheet is empty
+  if (sheet.getLastRow() === 0) {
+    sheet.getRange(1, 1, 1, ATTENDANCE_HEADERS.length).setValues([ATTENDANCE_HEADERS]);
+    const headerRange = sheet.getRange(1, 1, 1, ATTENDANCE_HEADERS.length);
+    headerRange
+      .setFontWeight('bold')
+      .setBackground(HEADER_BG_COLOR)
+      .setFontColor(HEADER_TEXT_COLOR)
+      .setHorizontalAlignment('center');
+    sheet.setFrozenRows(1);
+  }
+
+  const dates = Array.isArray(data.dates) ? data.dates : [];
+  const maHV = (data.maHV || '').trim();
+  const hoTen = (data.hoTen || '').trim();
+  const ngaySinh = data.ngaySinh || '';
+  const capDai = data.capDai || '';
+
+  // Load existing data once for duplicate checking
+  const lastRow = sheet.getLastRow();
+  let existing = [];
+  if (lastRow > 1) {
+    existing = sheet.getRange(2, 1, lastRow - 1, ATTENDANCE_HEADERS.length).getValues();
+  }
+
+  const written = [];
+  const duplicates = [];
+
+  dates.forEach(d => {
+    const ngay = (d && d.date) ? String(d.date).trim() : '';
+    if (!ngay) return;
+
+    // Check duplicate against existing rows
+    const dup = existing.find(r => {
+      if (String(r[0]).trim() !== ngay) return false;
+      if (maHV && String(r[2]).trim()) {
+        return String(r[2]).trim() === maHV;
+      }
+      return String(r[3]).trim() === hoTen;
+    });
+
+    if (dup) {
+      duplicates.push(ngay);
+      return;
+    }
+
+    // Write new row
+    const row = [
+      ngay,
+      d.timestamp || new Date().toISOString(),
+      maHV,
+      hoTen,
+      ngaySinh,
+      capDai,
+      ''
+    ];
+    sheet.appendRow(row);
+
+    // Add to existing to prevent duplicates within the same batch
+    existing.push(row);
+    written.push(ngay);
+  });
+
+  return ContentService
+    .createTextOutput(JSON.stringify({
+      success: true,
+      action: 'attendanceMultiple',
+      written: written,
+      duplicates: duplicates,
+      writtenCount: written.length,
+      duplicateCount: duplicates.length,
+      sheetName: sheet.getName()
     }))
     .setMimeType(ContentService.MimeType.JSON);
 }
