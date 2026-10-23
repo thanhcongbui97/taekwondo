@@ -934,28 +934,35 @@
     const today = now.toLocaleDateString('vi-VN'); // dd/mm/yyyy
     const thang = String(now.getMonth() + 1).padStart(2, '0') + '/' + now.getFullYear();
 
+    console.log('[loadStatus] today =', today, '| thang =', thang);
+
     // Load attendance tab
     try {
       const data = await jsonpLoad(STATUS_ATTENDANCE_URL);
       const rows = (data.table.rows || []).filter(r => r.c && r.c.some(cell => cell && cell.v != null));
+      console.log('[loadStatus] attendance rows loaded:', rows.length);
       rows.forEach(row => {
-        const ngay = String(getCellValue(row, 0)).trim(); // NGAY column
-        const hoTen = String(getCellValue(row, 3)).trim(); // HO_TEN column
+        // gviz returns dates as "Date(YYYY,M,D)" - use formatDate() to normalize to dd/mm/yyyy
+        const ngay = formatDate(getCellValue(row, 0));
+        const hoTen = String(getCellValue(row, 3) || '').trim();
         if (ngay === today && hoTen) {
           attendanceTodaySet.add(normalize(hoTen));
         }
       });
+      console.log('[loadStatus] attendanceTodaySet size:', attendanceTodaySet.size,
+                  '| sample:', Array.from(attendanceTodaySet).slice(0, 5));
     } catch (err) {
-      console.warn('Không tải được trạng thái điểm danh:', err);
+      console.warn('[loadStatus] Không tải được trạng thái điểm danh:', err);
     }
 
     // Load fund tab
     try {
       const data = await jsonpLoad(STATUS_FUND_URL);
       const rows = (data.table.rows || []).filter(r => r.c && r.c.some(cell => cell && cell.v != null));
+      console.log('[loadStatus] fund rows loaded:', rows.length);
       rows.forEach(row => {
-        const ngay = String(getCellValue(row, 0)).trim(); // NGAY column
-        const hoTen = String(getCellValue(row, 3)).trim(); // HO_TEN column
+        const ngay = formatDate(getCellValue(row, 0));
+        const hoTen = String(getCellValue(row, 3) || '').trim();
         if (ngay && hoTen && ngay.length >= 10) {
           const rowThang = ngay.substring(3, 10); // extract MM/yyyy from dd/MM/yyyy
           if (rowThang === thang) {
@@ -963,8 +970,10 @@
           }
         }
       });
+      console.log('[loadStatus] fundThisMonthSet size:', fundThisMonthSet.size,
+                  '| sample:', Array.from(fundThisMonthSet).slice(0, 5));
     } catch (err) {
-      console.warn('Không tải được trạng thái đóng quỹ:', err);
+      console.warn('[loadStatus] Không tải được trạng thái đóng quỹ:', err);
     }
 
     // Update any buttons already rendered (in case user searched before status loaded)
