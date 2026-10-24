@@ -1,0 +1,836 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <link rel="shortcut icon" href="favicon.ico">
+    <title>Danh sách hoạt động - Taekwondo PTIT</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Design Bootstrap -->
+    <link href="css/mdb.min.css" rel="stylesheet">
+    <!-- Your custom styles (optional) -->
+    <link href="css/style.css" rel="stylesheet">
+    <style>
+        /* Stats bar */
+        .stats-bar {
+            background: #f8f9fa;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: #555;
+        }
+        .stats-bar .stat-item {
+            display: inline-block;
+            margin-right: 1.5rem;
+        }
+        .stats-bar .stat-item strong {
+            color: #33b5e5;
+            font-size: 1.1rem;
+        }
+
+        /* Month selector */
+        .month-selector {
+            background: #fff;
+            padding: 16px 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            margin-bottom: 1rem;
+        }
+        .month-selector label {
+            font-weight: 600;
+            color: #555;
+            margin-right: 8px;
+        }
+
+        /* Activity table */
+        .activity-table {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .activity-table table {
+            border-radius: 8px;
+        }
+        .activity-table thead th:first-child {
+            border-top-left-radius: 8px;
+        }
+        .activity-table thead th:last-child {
+            border-top-right-radius: 8px;
+        }
+        .activity-table thead th {
+            background: #33b5e5;
+            color: #fff;
+            font-weight: 600;
+            border: none;
+            padding: 12px;
+        }
+        .activity-table tbody td {
+            padding: 12px;
+            vertical-align: middle;
+        }
+        .activity-table tbody tr:last-child td:first-child {
+            border-bottom-left-radius: 8px;
+        }
+        .activity-table tbody tr:last-child td:last-child {
+            border-bottom-right-radius: 8px;
+        }
+        .activity-table tbody tr:hover {
+            background: #f5f5f5;
+        }
+        .activity-table .fund-paid {
+            color: #28a745;
+            font-size: 1.3rem;
+        }
+        .activity-table .fund-unpaid {
+            color: #dc3545;
+            font-size: 1.3rem;
+        }
+        .activity-table .attendance-count {
+            font-weight: 600;
+            color: #33b5e5;
+        }
+        .activity-table .attendance-dates {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        /* "..." action button in each row */
+        .activity-table .activity-action-trigger {
+            min-width: 36px;
+            min-height: 36px;
+            padding: 6px 10px !important;
+            border-radius: 50%;
+            font-size: 1.25rem;
+            line-height: 1;
+            color: #555;
+            transition: background-color 0.15s, color 0.15s, transform 0.1s;
+        }
+        .activity-table .activity-action-trigger:hover,
+        .activity-table .activity-action-trigger:focus {
+            background-color: #e9ecef;
+            color: #33b5e5;
+            text-decoration: none;
+            transform: scale(1.05);
+        }
+        .activity-table .activity-action-trigger:active {
+            transform: scale(0.95);
+        }
+
+        /* Close-fund button in the table (compact, fits in narrow column) */
+        .activity-table .close-fund-btn {
+            font-size: 0.8rem;
+            padding: 0.5rem 0.4rem;
+            white-space: nowrap;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+  <!--Main Navigation-->
+  <my-header></my-header>
+  <!--Main Navigation-->
+
+  <!--Main layout-->
+  <main class="mt-5">
+      <div class="container">
+
+          <!--Section: Danh sách hoạt động-->
+          <section id="hoatdong">
+              <section id="Danh sách hoạt động" class="text-center">
+                  <h2 class="mb-3 font-weight-bold text-center">Danh sách hoạt động</h2>
+                  <p class="text-muted">Thống kê điểm danh và đóng quỹ theo tháng.</p>
+              </section>
+          </section>
+
+          <hr class="my-4">
+
+          <!--Month selector-->
+          <div class="month-selector">
+              <div class="row align-items-center">
+                  <div class="col-md-6 mb-2 mb-md-0">
+                      <label for="monthSelect">Tháng:</label>
+                      <select id="monthSelect" class="form-control form-control-sm d-inline-block" style="width: auto;">
+                          <option value="1">Tháng 1</option>
+                          <option value="2">Tháng 2</option>
+                          <option value="3">Tháng 3</option>
+                          <option value="4">Tháng 4</option>
+                          <option value="5">Tháng 5</option>
+                          <option value="6">Tháng 6</option>
+                          <option value="7">Tháng 7</option>
+                          <option value="8">Tháng 8</option>
+                          <option value="9">Tháng 9</option>
+                          <option value="10">Tháng 10</option>
+                          <option value="11">Tháng 11</option>
+                          <option value="12">Tháng 12</option>
+                      </select>
+                      <label for="yearSelect" class="ml-3">Năm:</label>
+                      <select id="yearSelect" class="form-control form-control-sm d-inline-block" style="width: auto;"></select>
+                  </div>
+                  <div class="col-md-6 text-md-right">
+                      <button class="btn btn-primary btn-sm" id="loadBtn" type="button">
+                          <i class="fa fa-search mr-1"></i> Xem
+                      </button>
+                      <button class="btn btn-outline-secondary btn-sm" id="reloadBtn" type="button" title="Tải lại dữ liệu">
+                          <i class="fa fa-refresh mr-1"></i> Tải lại
+                      </button>
+                  </div>
+              </div>
+              <div class="row mt-2">
+                  <div class="col-md-6">
+                      <div class="input-group input-group-sm">
+                          <div class="input-group-prepend">
+                              <span class="input-group-text"><i class="fa fa-search"></i></span>
+                          </div>
+                          <input type="text" id="searchInput" class="form-control" placeholder="Tìm kiếm theo tên..." autocomplete="off">
+                          <div class="input-group-append">
+                              <button class="btn btn-outline-secondary" type="button" id="clearSearchBtn" title="Xóa tìm kiếm" style="display:none;">
+                                  <i class="fa fa-times"></i>
+                              </button>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+
+          <!--Stats bar-->
+          <div id="statsBar" class="stats-bar mb-3" style="display:none;"></div>
+
+          <!--Loading-->
+          <div id="loading" class="text-center my-5" style="display:none;">
+              <div class="spinner-border text-primary" role="status">
+                  <span class="sr-only">Đang tải...</span>
+              </div>
+              <p class="mt-2 text-muted">Đang tải dữ liệu...</p>
+          </div>
+
+          <!--Error-->
+          <div id="errorBox" class="alert alert-danger" style="display:none;" role="alert"></div>
+
+          <!--Results table-->
+          <div id="resultsContainer" style="display:none;">
+              <div class="table-responsive activity-table">
+                  <table class="table mb-0">
+                      <thead>
+                          <tr>
+                              <th style="width: 60px;">STT</th>
+                              <th>Họ tên</th>
+                              <th style="width: 110px;">Ngày sinh</th>
+                              <th style="width: 200px;">Điểm danh</th>
+                              <th style="width: 140px;" class="text-center">Đóng quỹ</th>
+                              <th style="width: 80px;" class="text-center">Thao tác</th>
+                          </tr>
+                      </thead>
+                      <tbody id="resultsBody"></tbody>
+                  </table>
+              </div>
+          </div>
+
+          <!--Empty state-->
+          <div id="emptyState" class="text-center text-muted my-5" style="display:none;">
+              <i class="fas fa-inbox fa-3x mb-3"></i>
+              <p>Không có dữ liệu điểm danh trong tháng này.</p>
+          </div>
+
+          <!--No search results state-->
+          <div id="noSearchResults" class="text-center text-muted my-5" style="display:none;">
+              <i class="fas fa-search fa-3x mb-3"></i>
+              <p>Không tìm thấy thành viên nào khớp với "<strong id="searchQueryDisplay"></strong>".</p>
+          </div>
+
+      </div>
+  </main>
+  <!--Main layout-->
+
+  <my-footer></my-footer>
+
+  <!-- SCRIPTS -->
+  <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+  <script type="text/javascript" src="js/popper.min.js"></script>
+  <script type="text/javascript" src="js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="js/mdb.min.js"></script>
+  <script src="js/modules/header.js" defer></script>
+  <script src="js/modules/footer.js" defer></script>
+  <script src="js/modules/auth-nav.js" defer></script>
+
+  <script>
+  // ===== Authentication =====
+  // Reuse the same auth as quanli.html (sessionStorage key: 'quanli_authed').
+  // The login/logout button in the header is handled by js/modules/auth-nav.js.
+  const AUTH_STORAGE_KEY = 'quanli_authed';
+
+  function isAuthed() {
+    return sessionStorage.getItem(AUTH_STORAGE_KEY) === '1';
+  }
+
+  // ===== Config =====
+  // Same sheet IDs as quanli.html
+  const STATUS_SHEET_ID = '1v85Al1tqyt7D6u11U5Ede6UeBG8oV9dU2-1Vht3eglE';
+  const STATUS_ATTENDANCE_GID = 1395531960; // tab "diemdanh"
+  const STATUS_FUND_GID = 803125790;        // tab "dongquy"
+  const STATUS_ATTENDANCE_URL = `https://docs.google.com/spreadsheets/d/${STATUS_SHEET_ID}/gviz/tq?gid=${STATUS_ATTENDANCE_GID}`;
+  const STATUS_FUND_URL = `https://docs.google.com/spreadsheets/d/${STATUS_SHEET_ID}/gviz/tq?gid=${STATUS_FUND_GID}`;
+
+  // Main member sheet (for date of birth lookup)
+  const MEMBER_SHEET_ID = '1wZEUSJfXwrnG-fyONaRb6Izmm9oWU3xTS5xZt_9bqnY';
+  const MEMBER_SHEET_GID = '2030852021';
+  const MEMBER_SHEET_URL = `https://docs.google.com/spreadsheets/d/${MEMBER_SHEET_ID}/gviz/tq?gid=${MEMBER_SHEET_GID}`;
+
+  // Column indices in the status sheets
+  // Col 0: NGAY (date), Col 3: HO_TEN (name)
+  const STATUS_COL = { NGAY: 0, HO_TEN: 3 };
+
+  // Column indices in the main member sheet
+  const MEMBER_COL = { HO_TEN: 2, NGAY_SINH: 4 };
+
+  // Apps Script Web App URL - same as quanli.html
+  const EXPORT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw4GZwiPmet6oAKEIacG-Sx9LN3Df2kb9dtoCiRWCqhCdN8tILd7qgFbiXzsmZLoXa0/exec';
+
+  // ===== State =====
+  let attendanceByPersonMap = new Map(); // normalized name -> Set of "dd/mm/yyyy" dates
+  let fundByPersonMap = new Map();       // normalized name -> Set of "MM/yyyy" months
+  let dobByPersonMap = new Map();        // normalized name -> "dd/mm/yyyy" (date of birth)
+  let isLoading = false;
+  let searchQuery = '';                  // current search filter (normalized)
+  let currentTotalSessions = 0;          // unique dates in current view (for stats bar)
+
+  // ===== DOM refs =====
+  const $monthSelect = $('#monthSelect');
+  const $yearSelect = $('#yearSelect');
+  const $loadBtn = $('#loadBtn');
+  const $reloadBtn = $('#reloadBtn');
+  const $searchInput = $('#searchInput');
+  const $clearSearchBtn = $('#clearSearchBtn');
+  const $loading = $('#loading');
+  const $errorBox = $('#errorBox');
+  const $statsBar = $('#statsBar');
+  const $resultsContainer = $('#resultsContainer');
+  const $resultsBody = $('#resultsBody');
+  const $emptyState = $('#emptyState');
+  const $noSearchResults = $('#noSearchResults');
+  const $searchQueryDisplay = $('#searchQueryDisplay');
+
+  // ===== Helpers =====
+  function getCellValue(row, idx) {
+    const cell = row.c && row.c[idx];
+    if (!cell) return '';
+    return cell.v == null ? '' : String(cell.v);
+  }
+
+  function formatDate(dateStr) {
+    // Google returns "Date(YYYY,M,D)" for date columns
+    const m = /Date\((\d+),(\d+),(\d+)\)/.exec(dateStr);
+    if (!m) return dateStr || '';
+    const yyyy = m[1];
+    const mm = String(parseInt(m[2], 10) + 1).padStart(2, '0');
+    const dd = String(parseInt(m[3], 10)).padStart(2, '0');
+    return `${dd}/${mm}/${yyyy}`;
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&')
+      .replace(/</g, '<')
+      .replace(/>/g, '>')
+      .replace(/"/g, '"')
+      .replace(/'/g, '&#039;');
+  }
+
+  function normalize(s) {
+    return (s || '')
+      .toLowerCase()
+      .normalize('NFC')
+      .trim();
+  }
+
+  // ===== JSONP loader (same pattern as quanli.html) =====
+  function jsonpLoad(url) {
+    return new Promise((resolve, reject) => {
+      const callbackName = 'sheetCallback_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+      const scriptId = 'sheet-jsonp-' + callbackName;
+      let timeoutId = null;
+
+      function cleanup() {
+        if (timeoutId) clearTimeout(timeoutId);
+        try { delete window[callbackName]; } catch (e) { window[callbackName] = undefined; }
+        const scriptEl = document.getElementById(scriptId);
+        if (scriptEl && scriptEl.parentNode) scriptEl.parentNode.removeChild(scriptEl);
+      }
+
+      timeoutId = setTimeout(() => {
+        cleanup();
+        reject(new Error('Quá thời gian chờ phản hồi (15s)'));
+      }, 15000);
+
+      window[callbackName] = function (data) {
+        cleanup();
+        if (!data || data.status !== 'ok' || !data.table) {
+          reject(new Error('Sheet trả về trạng thái: ' + (data && data.status ? data.status : 'unknown')));
+          return;
+        }
+        resolve(data);
+      };
+
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.src = `${url}&tqx=out:json;responseHandler:${callbackName}`;
+      script.onerror = function () {
+        cleanup();
+        reject(new Error('Không tải được dữ liệu (lỗi mạng hoặc sheet riêng tư)'));
+      };
+      document.body.appendChild(script);
+    });
+  }
+
+  // ===== Data loading =====
+  async function loadData() {
+    if (isLoading) return;
+    isLoading = true;
+    $loadBtn.prop('disabled', true);
+    $reloadBtn.prop('disabled', true);
+    $loading.show();
+    $errorBox.hide();
+    $resultsContainer.hide();
+    $emptyState.hide();
+    $statsBar.hide();
+
+    try {
+      // Load all 3 sheets in parallel (member sheet is optional - for DOB lookup)
+      const [attendanceData, fundData, memberData] = await Promise.all([
+        jsonpLoad(STATUS_ATTENDANCE_URL),
+        jsonpLoad(STATUS_FUND_URL),
+        jsonpLoad(MEMBER_SHEET_URL).catch(err => {
+          console.warn('Member sheet unavailable (DOB will be empty):', err);
+          return null;
+        })
+      ]);
+
+      // Parse attendance: build map of normalized name -> Set of "dd/mm/yyyy" dates
+      attendanceByPersonMap = new Map();
+      const attendanceRows = (attendanceData.table.rows || []).filter(r => r.c && r.c.some(cell => cell && cell.v != null));
+      attendanceRows.forEach(row => {
+        const ngay = formatDate(getCellValue(row, STATUS_COL.NGAY));
+        const hoTen = String(getCellValue(row, STATUS_COL.HO_TEN) || '').trim();
+        if (ngay && hoTen) {
+          const key = normalize(hoTen);
+          if (!attendanceByPersonMap.has(key)) {
+            attendanceByPersonMap.set(key, new Set());
+          }
+          attendanceByPersonMap.get(key).add(ngay);
+          // Also store the original name (for display)
+          if (!attendanceByPersonMap.get(key)._displayName) {
+            attendanceByPersonMap.get(key)._displayName = hoTen;
+          }
+        }
+      });
+
+      // Parse fund: build map of normalized name -> Set of "MM/yyyy" months
+      fundByPersonMap = new Map();
+      const fundRows = (fundData.table.rows || []).filter(r => r.c && r.c.some(cell => cell && cell.v != null));
+      fundRows.forEach(row => {
+        const ngay = formatDate(getCellValue(row, STATUS_COL.NGAY));
+        const hoTen = String(getCellValue(row, STATUS_COL.HO_TEN) || '').trim();
+        if (ngay && hoTen && ngay.length >= 10) {
+          const rowThang = ngay.substring(3, 10); // extract MM/yyyy from dd/MM/yyyy
+          const key = normalize(hoTen);
+          if (!fundByPersonMap.has(key)) {
+            fundByPersonMap.set(key, new Set());
+          }
+          fundByPersonMap.get(key).add(rowThang);
+          if (!fundByPersonMap.get(key)._displayName) {
+            fundByPersonMap.get(key)._displayName = hoTen;
+          }
+        }
+      });
+
+      // Parse member sheet: build map of normalized name -> "dd/mm/yyyy" (DOB)
+      dobByPersonMap = new Map();
+      if (memberData && memberData.table && memberData.table.rows) {
+        const memberRows = memberData.table.rows.filter(r => r.c && r.c.some(cell => cell && cell.v != null));
+        memberRows.forEach(row => {
+          const hoTen = String(getCellValue(row, MEMBER_COL.HO_TEN) || '').trim();
+          const ngaySinh = formatDate(getCellValue(row, MEMBER_COL.NGAY_SINH));
+          if (hoTen && ngaySinh) {
+            const key = normalize(hoTen);
+            // First occurrence wins (don't overwrite)
+            if (!dobByPersonMap.has(key)) {
+              dobByPersonMap.set(key, ngaySinh);
+            }
+          }
+        });
+      }
+
+      $loading.hide();
+      renderTable();
+    } catch (err) {
+      $loading.hide();
+      $errorBox.html(
+        '<i class="fas fa-exclamation-triangle"></i> ' +
+        'Không tải được dữ liệu: ' + escapeHtml(err.message) +
+        '<br><small>Kiểm tra kết nối mạng hoặc thử lại sau.</small>'
+      ).show();
+    } finally {
+      isLoading = false;
+      $loadBtn.prop('disabled', false);
+      $reloadBtn.prop('disabled', false);
+    }
+  }
+
+  // ===== Render table =====
+  function renderTable() {
+    const selectedMonth = parseInt($monthSelect.val(), 10); // 1-12
+    const selectedYear = parseInt($yearSelect.val(), 10);
+    const thangKey = String(selectedMonth).padStart(2, '0') + '/' + selectedYear;
+
+    // Collect all members who attended in the selected month
+    const allMembers = []; // [{ name, dates: [dd/mm/yyyy, ...] }]
+    attendanceByPersonMap.forEach((dateSet, key) => {
+      const datesInMonth = [];
+      dateSet.forEach(dateStr => {
+        // dateStr is "dd/mm/yyyy"
+        const parts = dateStr.split('/');
+        if (parts.length === 3) {
+          const dd = parts[0];
+          const mm = parseInt(parts[1], 10);
+          const yyyy = parseInt(parts[2], 10);
+          if (mm === selectedMonth && yyyy === selectedYear) {
+            datesInMonth.push(dateStr);
+          }
+        }
+      });
+      if (datesInMonth.length > 0) {
+        // Sort dates ascending
+        datesInMonth.sort();
+        allMembers.push({
+          key: key,
+          name: dateSet._displayName || key,
+          dates: datesInMonth,
+          count: datesInMonth.length
+        });
+      }
+    });
+
+    // Sort by name (Vietnamese-aware: just use localeCompare)
+    allMembers.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+
+    // Apply search filter (if any)
+    const members = searchQuery
+      ? allMembers.filter(m => normalize(m.name).includes(searchQuery))
+      : allMembers;
+
+    // Update stats (reflect filtered results when searching)
+    const totalAttended = members.length;
+    // Count unique dates across all (filtered) members - 2 people on same day = 1 session
+    const uniqueDates = new Set();
+    members.forEach(m => m.dates.forEach(d => uniqueDates.add(d)));
+    const totalSessions = uniqueDates.size;
+    currentTotalSessions = totalSessions; // store for updateStatsBar()
+    const totalFundPaid = members.filter(m => {
+      const fundSet = fundByPersonMap.get(m.key);
+      return fundSet && fundSet.has(thangKey);
+    }).length;
+
+    let statsHtml = `<i class="fas fa-calendar-check"></i> Tháng <strong>${selectedMonth}/${selectedYear}</strong>: ` +
+      `<span class="stat-item"><strong>${totalAttended}</strong> người điểm danh</span>` +
+      `<span class="stat-item"><strong>${totalSessions}</strong> buổi tổng cộng</span>` +
+      `<span class="stat-item"><strong>${totalFundPaid}</strong>/${totalAttended} đã đóng quỹ</span>`;
+    if (searchQuery && allMembers.length > members.length) {
+      statsHtml += ` <span class="stat-item text-muted"><i>(lọc từ ${allMembers.length} người)</i></span>`;
+    }
+    $statsBar.html(statsHtml).show();
+
+    // Render table
+    if (allMembers.length === 0) {
+      // No attendance data at all for this month
+      $resultsContainer.hide();
+      $noSearchResults.hide();
+      $emptyState.show();
+      return;
+    }
+
+    if (members.length === 0) {
+      // Has data but search filtered everything out
+      $resultsContainer.hide();
+      $emptyState.hide();
+      $searchQueryDisplay.text($searchInput.val());
+      $noSearchResults.show();
+      return;
+    }
+
+    $emptyState.hide();
+    $noSearchResults.hide();
+    $resultsContainer.show();
+    $resultsBody.empty();
+
+    members.forEach((m, idx) => {
+      const fundSet = fundByPersonMap.get(m.key);
+      const isFundPaid = fundSet && fundSet.has(thangKey);
+      // Fund button: clickable if not paid, disabled if paid
+      const fundBtn = isFundPaid
+        ? `<button class="btn btn-sm btn-success close-fund-btn" disabled
+             title="Đã đóng quỹ tháng ${selectedMonth}/${selectedYear}">
+             <i class="fa fa-check"></i> Đã đóng quỹ
+           </button>`
+        : `<button class="btn btn-sm btn-warning close-fund-btn"
+             data-ho-ten="${escapeHtml(m.name)}"
+             data-thang="${thangKey}"
+             title="Đóng quỹ tháng ${selectedMonth}/${selectedYear}">
+             <i class="fa fa-coins"></i> Đóng quỹ
+           </button>`;
+
+      // Show dates as compact list (max 5, then "...")
+      const datesDisplay = m.dates.length <= 5
+        ? m.dates.join(', ')
+        : m.dates.slice(0, 5).join(', ') + ' <span class="text-muted">(+' + (m.dates.length - 5) + ')</span>';
+
+      // Action button: "..." dropdown to close fund for the selected month
+      const actionCell = `
+        <div class="dropdown text-center">
+          <button class="btn btn-sm btn-link text-secondary p-0 activity-action-trigger"
+                  type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                  title="Thao tác">
+            <i class="fa fa-ellipsis-v fa-lg"></i>
+          </button>
+          <div class="dropdown-menu dropdown-menu-right">
+            <a class="dropdown-item close-fund-link" href="#"
+               data-ho-ten="${escapeHtml(m.name)}"
+               data-thang="${thangKey}">
+              <i class="fa fa-coins"></i> Đóng quỹ tháng ${selectedMonth}/${selectedYear}
+            </a>
+          </div>
+        </div>
+      `;
+
+      const row = `
+        <tr>
+          <td>${idx + 1}</td>
+          <td><strong>${escapeHtml(m.name)}</strong></td>
+          <td>${escapeHtml(dobByPersonMap.get(m.key) || '—')}</td>
+          <td>
+            <span class="attendance-count">${m.count} buổi</span>
+            <div class="attendance-dates">${datesDisplay}</div>
+          </td>
+          <td class="text-center">${fundBtn}</td>
+          <td class="text-center">${actionCell}</td>
+        </tr>
+      `;
+      $resultsBody.append(row);
+    });
+  }
+
+  // ===== Close fund for a member in the selected month =====
+  // Writes one row to the "dongquy" tab for that specific person + month.
+  // Uses the same Apps Script endpoint as quanli.html.
+  // $btn can be either the inline fund button (.close-fund-btn) or the dropdown link (.close-fund-link).
+  async function closeFundForActivityMember($btn) {
+    if (!EXPORT_SCRIPT_URL) {
+      alert('Chưa cấu hình EXPORT_SCRIPT_URL.');
+      return;
+    }
+
+    const hoTen = $btn.data('ho-ten') || '';
+    const thang = $btn.data('thang') || ''; // "MM/yyyy"
+
+    if (!hoTen) {
+      alert('Không có tên hội viên, không thể đóng quỹ.');
+      return;
+    }
+    if (!thang) {
+      alert('Không có tháng, không thể đóng quỹ.');
+      return;
+    }
+
+    // Date = first day of the selected month (dd/mm/yyyy)
+    const dateStr = '01/' + thang;
+
+    if (!confirm(`Đóng quỹ tháng ${thang} cho ${hoTen}?`)) {
+      return;
+    }
+
+    // Show spinner in the clicked element + disable it
+    const originalHtml = $btn.html();
+    $btn.html('<i class="fa fa-spinner fa-spin"></i> Đang ghi...');
+    $btn.css('pointer-events', 'none');
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+    try {
+      const response = await fetch(EXPORT_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'closeFund',
+          date: dateStr,
+          timestamp: new Date().toISOString(),
+          maHV: '',
+          hoTen: hoTen,
+          ngaySinh: '',
+          capDai: ''
+        }),
+        redirect: 'follow',
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status} ${response.statusText}`);
+      }
+
+      // Try to read response with short timeout (5s)
+      let result = null;
+      let assumedSuccess = false;
+      try {
+        const readController = new AbortController();
+        const readTimeoutId = setTimeout(() => readController.abort(), 5000);
+        const text = await response.text();
+        clearTimeout(readTimeoutId);
+        result = text ? JSON.parse(text) : null;
+      } catch (readErr) {
+        console.warn('[closeFundForActivityMember] Cannot read response. Assuming success.', readErr);
+        result = { success: true, assumed: true };
+        assumedSuccess = true;
+      }
+
+      if (result && (result.success || result.duplicate)) {
+        // Update local state
+        const key = normalize(hoTen);
+        if (!fundByPersonMap.has(key)) fundByPersonMap.set(key, new Set());
+        fundByPersonMap.get(key).add(thang);
+
+        // Replace the fund cell with the "Đã đóng quỹ" button
+        const $row = $btn.closest('tr');
+        const $fundCell = $row.find('td').eq(3); // 4th cell (0-indexed: STT, name, attendance, fund)
+        const [mm, yyyy] = thang.split('/');
+        $fundCell.html(
+          '<button class="btn btn-sm btn-success close-fund-btn" disabled ' +
+          'title="Đã đóng quỹ tháng ' + mm + '/' + yyyy + '">' +
+          '<i class="fa fa-check"></i> Đã đóng quỹ</button>'
+        );
+
+        // Update stats bar
+        updateStatsBar();
+
+        if (assumedSuccess) {
+          setTimeout(() => alert('Đã ghi (không xác nhận được từ server - kiểm tra sheet nếu cần)'), 50);
+        } else if (result.duplicate) {
+          alert(result.error || `${hoTen} đã đóng quỹ tháng ${thang} rồi.`);
+        }
+      } else {
+        throw new Error((result && result.error) || 'Lỗi không xác định');
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError') {
+        // Timeout - assume success
+        console.warn('[closeFundForActivityMember] Fetch timeout - assuming success');
+        const key = normalize(hoTen);
+        if (!fundByPersonMap.has(key)) fundByPersonMap.set(key, new Set());
+        fundByPersonMap.get(key).add(thang);
+
+        const $row = $btn.closest('tr');
+        const $fundCell = $row.find('td').eq(3);
+        const [mm, yyyy] = thang.split('/');
+        $fundCell.html(
+          '<button class="btn btn-sm btn-success close-fund-btn" disabled ' +
+          'title="Đã đóng quỹ tháng ' + mm + '/' + yyyy + '">' +
+          '<i class="fa fa-check"></i> Đã đóng quỹ</button>'
+        );
+        updateStatsBar();
+        setTimeout(() => alert('Đã ghi (timeout - kiểm tra sheet nếu cần)'), 50);
+        return;
+      }
+      alert('Lỗi khi đóng quỹ: ' + err.message);
+      // Restore the clicked element
+      $btn.html(originalHtml);
+      $btn.css('pointer-events', '');
+      console.error('[closeFundForActivityMember] error:', err);
+    }
+  }
+
+  // Recalculate and update the stats bar
+  function updateStatsBar() {
+    const selectedMonth = parseInt($monthSelect.val(), 10);
+    const selectedYear = parseInt($yearSelect.val(), 10);
+    const thangKey = String(selectedMonth).padStart(2, '0') + '/' + selectedYear;
+
+    const totalAttended = $resultsBody.find('tr').length;
+    // Use stored unique-date count (set in renderTable) - 2 people on same day = 1 session
+    const totalSessions = currentTotalSessions;
+    // Count disabled (paid) close-fund buttons
+    const totalFundPaid = $resultsBody.find('.close-fund-btn[disabled]').length;
+
+    $statsBar.html(
+      `<i class="fas fa-calendar-check"></i> Tháng <strong>${selectedMonth}/${selectedYear}</strong>: ` +
+      `<span class="stat-item"><strong>${totalAttended}</strong> người điểm danh</span>` +
+      `<span class="stat-item"><strong>${totalSessions}</strong> buổi tổng cộng</span>` +
+      `<span class="stat-item"><strong>${totalFundPaid}</strong>/${totalAttended} đã đóng quỹ</span>`
+    );
+  }
+
+  // ===== Init =====
+  function init() {
+    // Set default month/year to current
+    const now = new Date();
+    $monthSelect.val(String(now.getMonth() + 1));
+
+    // Populate year selector (current year ± 2)
+    const currentYear = now.getFullYear();
+    for (let y = currentYear - 2; y <= currentYear + 1; y++) {
+      const opt = $('<option></option>').val(y).text(y);
+      if (y === currentYear) opt.prop('selected', true);
+      $yearSelect.append(opt);
+    }
+
+    // Event handlers
+    $loadBtn.on('click', renderTable);
+    $reloadBtn.on('click', loadData);
+    $monthSelect.on('change', renderTable);
+    $yearSelect.on('change', renderTable);
+
+    // Search input - filter members by name (case-insensitive, partial match)
+    $searchInput.on('input', function () {
+      searchQuery = normalize($(this).val());
+      $clearSearchBtn.toggle(searchQuery.length > 0);
+      renderTable();
+    });
+    $clearSearchBtn.on('click', function () {
+      $searchInput.val('');
+      searchQuery = '';
+      $clearSearchBtn.hide();
+      renderTable();
+      $searchInput.focus();
+    });
+
+    // Close-fund button in the table (event delegation for dynamically rendered rows)
+    $resultsBody.on('click', '.close-fund-btn', function (e) {
+      e.preventDefault();
+      // Skip if already disabled (already paid)
+      if ($(this).prop('disabled')) return;
+      closeFundForActivityMember($(this));
+    });
+
+    // Close-fund dropdown item (event delegation for dynamically rendered rows)
+    $resultsBody.on('click', '.close-fund-link', function (e) {
+      e.preventDefault();
+      closeFundForActivityMember($(this));
+    });
+
+    // Load data on page load
+    loadData();
+  }
+
+  $(document).ready(init);
+  </script>
+
+</body>
+
+</html>

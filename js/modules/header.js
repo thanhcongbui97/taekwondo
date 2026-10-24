@@ -54,6 +54,7 @@ class CustomHeader extends HTMLElement {
                             <a class="dropdown-item" href="demo.html">Chương trình học</a>
                             <a class="dropdown-item" href="thanhvien.html">Thành viên</a>
                             <a class="dropdown-item" href="quanli.html">Quản lý thông tin</a>
+                            <a class="dropdown-item" href="hoatdong.html">Danh sách hoạt động</a>
                             <a class="dropdown-item" href="ghepdoi.html">Ghép đôi</a>
                             <a class="dropdown-item" href="spinwheel.html">Vòng quay may mắn</a>
                         </div>
@@ -78,6 +79,9 @@ class CustomHeader extends HTMLElement {
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="https://www.instagram.com/taekwondo.ptit/"><i class="fa fa-instagram"></i></a>
+                </li>
+                <li class="nav-item" id="auth-nav-item">
+                    <!-- Populated by js/modules/auth-nav.js -->
                 </li>
             </ul>
         </div>

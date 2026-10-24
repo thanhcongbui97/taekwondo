@@ -85,6 +85,57 @@
             color: #666;
         }
 
+        /* Fund summary card (tổng hợp quỹ) - prominent display at top of page */
+        .fund-summary {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff3cc 100%);
+            border-left: 4px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+        .fund-summary .fund-icon {
+            font-size: 3rem;
+            color: #ffc107;
+        }
+        .fund-summary .fund-label {
+            font-size: 0.8rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .fund-summary .fund-month {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        .fund-summary .fund-count {
+            font-size: 0.95rem;
+            color: #555;
+        }
+        .fund-summary .fund-count strong {
+            color: #33b5e5;
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+        .fund-summary .fund-total-label {
+            font-size: 0.8rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .fund-summary .fund-total {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #28a745;
+            line-height: 1.2;
+        }
+
         /* Section title for dynamically rendered extra fields */
         .member-card .field-section-title {
             font-size: 0.75rem;
@@ -109,14 +160,6 @@
           .member-card.member-card-bcn {
               border-left-color: #dc3545;
           }
-
-        /* Logout button (fixed position, top-right) */
-        .logout-btn {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            z-index: 100;
-        }
 
         /* Compact calendar day buttons (for mobile/iPhone) - flex layout, equal-width columns */
         #multiAttCalendar {
@@ -177,6 +220,21 @@
         .member-card .multi-att-trigger:active {
             transform: scale(0.95);
         }
+
+        /* Action buttons row (Điểm danh + Đóng quỹ) - side by side, taller, narrower */
+        .member-card .action-buttons-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-top: 0.5rem;
+        }
+        .member-card .action-buttons-row .btn {
+            flex: 1 1 0;
+            min-width: 0;
+            padding: 0.75rem 0.5rem;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
     </style>
 </head>
 
@@ -184,11 +242,6 @@
   <!--Main Navigation-->
   <my-header></my-header>
   <!--Main Navigation-->
-
-  <!--Logout button (visible when authenticated)-->
-  <button class="logout-btn" id="logoutBtn" title="Đăng xuất">
-      <i class="fas fa-sign-out-alt"></i> Đăng xuất
-  </button>
 
   <!--Main layout-->
   <main class="mt-5">
@@ -210,6 +263,26 @@
                       </div>
               </section>
           </section>
+
+          <!--Fund summary (tổng hợp quỹ) - shown at top of page, updates when fund data loads or new payment is made-->
+          <div id="fundSummary" class="fund-summary" style="display:none;">
+              <div class="row align-items-center">
+                  <div class="col-md-1 text-center">
+                      <i class="fas fa-coins fund-icon"></i>
+                  </div>
+                  <div class="col-md-7">
+                      <div class="fund-label">TỔNG HỢP QUỸ</div>
+                      <div class="fund-month">Tháng <span id="fundSummaryMonth">--/----</span></div>
+                      <div class="fund-count">
+                          <strong id="fundSummaryCount">0</strong> người đã đóng quỹ × 160.000 VNĐ
+                      </div>
+                  </div>
+                  <div class="col-md-4 text-md-right">
+                      <div class="fund-total-label">Tổng tiền</div>
+                      <div class="fund-total" id="fundSummaryTotal">0 VNĐ</div>
+                  </div>
+              </div>
+          </div>
 
           <hr class="my-5">
 
@@ -260,6 +333,18 @@
                           <button class="btn btn-outline-success" id="exportBtn" type="button" title="Ghi toàn bộ hội viên và hồ sơ đăng ký vào Google Sheet (ghi đè)">
                               <i class="fa fa-file-export ml-1"></i> Ghi vào Sheet
                           </button>
+                      </div>
+                      <div class="row mt-4 justify-content-center">
+                          <div class="col-md-5">
+                              <div class="md-form form-sm m-0">
+                                  <i class="fa fa-calendar-check prefix grey-text"></i>
+                                  <input type="date" id="attendanceDateInput" class="form-control form-control-sm" autocomplete="off">
+                                  <label for="attendanceDateInput" class="active">Ngày điểm danh (mặc định: hôm nay)</label>
+                              </div>
+                              <small class="text-muted d-block text-center mt-1">
+                                  Nút "Điểm danh" trên từng thẻ sẽ ghi cho ngày này.
+                              </small>
+                          </div>
                       </div>
                       <div class="text-center mt-4">
                           <small class="text-muted">Tìm kiếm theo tên và/hoặc năm sinh. Không phân biệt hoa/thường, không cần nhập đầy đủ tên.</small>
@@ -374,31 +459,20 @@
   <script type="text/javascript" src="js/mdb.min.js"></script>
   <script src="js/modules/header.js" defer></script>
   <script src="js/modules/footer.js" defer></script>
+  <script src="js/modules/auth-nav.js" defer></script>
   <script src="js/quanli-auth.js"></script>
 
   <script>
   // ===== Authentication =====
   // Auth state is stored in sessionStorage by login.html.
-  // If not authed, redirect to login.html.
-  // Logout clears session and redirects to login.html.
+  // The login/logout button in the header is handled by js/modules/auth-nav.js.
+  // Data loading still works for unauthenticated users (will fail gracefully
+  // if sheets are private); they can click "Đăng nhập" in the header to log in.
   const AUTH_STORAGE_KEY = 'quanli_authed';
-  const LOGIN_PAGE = 'login.html';
 
   function isAuthed() {
     return sessionStorage.getItem(AUTH_STORAGE_KEY) === '1';
   }
-
-  function handleLogout() {
-    sessionStorage.removeItem(AUTH_STORAGE_KEY);
-    window.location.href = LOGIN_PAGE;
-  }
-
-  // Gate: redirect to login if not authed
-  if (!isAuthed()) {
-    window.location.href = LOGIN_PAGE;
-  }
-
-  document.getElementById('logoutBtn').addEventListener('click', handleLogout);
 
   // ===== Config =====
   const SHEET_ID = '1wZEUSJfXwrnG-fyONaRb6Izmm9oWU3xTS5xZt_9bqnY';
@@ -449,6 +523,11 @@
   const SHEET10_ID = '1E46oxX0ASNfc-9_8NKPsK5tljWVSQKjsBOOtX1q2kYI';
   const SHEET10_GID = '0';
   const SHEET10_URL = `https://docs.google.com/spreadsheets/d/${SHEET10_ID}/gviz/tq?gid=${SHEET10_GID}`;
+
+  // Latest registration sheet (has header row + VÕ PHỤC column)
+  const SHEET11_ID = '1N4ZP5tbuSXO_Ck4Nw_wnwNiyOem8loNe0si0GVV2FpE';
+  const SHEET11_GID = '0';
+  const SHEET11_URL = `https://docs.google.com/spreadsheets/d/${SHEET11_ID}/gviz/tq?gid=${SHEET11_GID}`;
 
   // ===== Export config =====
   // Destination sheet (will be overwritten on each export)
@@ -582,6 +661,24 @@
   // SHEET10: has DOB
   const SHEET10_COL = { HO_TEN: 1, NGAY_SINH: 2, SDT: 3, EMAIL: 4, FACEBOOK: 5, TRUONG: 6, NGUON_BIET: 7, MONG_MUON: 8 };
 
+  // SHEET11: latest registration sheet (has header row + VÕ PHỤC column)
+  const SHEET11_COL = {
+    TIMESTAMP: 0,
+    HO_TEN: 1,
+    NGAY_SINH: 2,
+    SDT: 3,
+    EMAIL: 4,
+    MAIL: 5,
+    VO_PHUC: 6,
+    FACEBOOK: 7,
+    TRUONG: 8,
+    MA_SV: 9,
+    NGUON_BIET: 10,
+    DA_HOC: 11,
+    CHUNG_NHAN: 12,
+    MONG_MUON: 13
+  };
+
   // ===== State =====
   let allRows = [];            // raw rows from member sheet
   let colLabels = [];          // column labels
@@ -596,6 +693,10 @@
   let attendanceByPersonMap = new Map(); // normalized name -> Set of "dd/mm/yyyy" dates attended
   let fundThisMonthSet = new Set();    // normalized names who already paid fund this month
   let fundByPersonMap = new Map();     // normalized name -> Set of "MM/yyyy" months paid
+
+  // Selected attendance date (dd/mm/yyyy). Defaults to today. Used by the
+  // single-day "Điểm danh" button on each member card.
+  let selectedAttendanceDate = '';
 
   // ===== DOM refs =====
   const $searchInput = $('#searchInput');
@@ -618,6 +719,35 @@
   const $results = $('#results');
   const $statusBar = $('#statusBar');
 
+  // Fund summary DOM refs
+  const $fundSummary = $('#fundSummary');
+  const $fundSummaryMonth = $('#fundSummaryMonth');
+  const $fundSummaryCount = $('#fundSummaryCount');
+  const $fundSummaryTotal = $('#fundSummaryTotal');
+
+  // ===== Fund summary =====
+  // Each member pays 160,000 VND/month. Total = count × 160,000.
+  const FUND_AMOUNT_PER_PERSON = 160000;
+
+  // Format number as Vietnamese currency: 1600000 -> "1.600.000 VNĐ"
+  function formatVND(amount) {
+    return amount.toLocaleString('vi-VN') + ' VNĐ';
+  }
+
+  // Recalculate and render the fund summary card at the top of the page.
+  // Called after loadStatus() completes and after each successful fund payment.
+  function updateFundSummary() {
+    const now = new Date();
+    const thang = String(now.getMonth() + 1).padStart(2, '0') + '/' + now.getFullYear();
+    const count = fundThisMonthSet.size;
+    const total = count * FUND_AMOUNT_PER_PERSON;
+
+    $fundSummaryMonth.text(thang);
+    $fundSummaryCount.text(count);
+    $fundSummaryTotal.text(formatVND(total));
+    $fundSummary.show();
+  }
+
   // ===== Helpers =====
   function getCellValue(row, idx) {
     const cell = row.c && row.c[idx];
@@ -633,6 +763,45 @@
     const mm = String(parseInt(m[2], 10) + 1).padStart(2, '0');
     const dd = String(parseInt(m[3], 10)).padStart(2, '0');
     return `${dd}/${mm}/${yyyy}`;
+  }
+
+  // ===== Date helpers for the attendance date picker =====
+  // HTML <input type="date"> uses "yyyy-mm-dd"; internal code uses "dd/mm/yyyy".
+  function pad2(n) { return String(n).padStart(2, '0'); }
+
+  function getTodayInput() {
+    // Returns today as "yyyy-mm-dd" (value format for <input type="date">)
+    const now = new Date();
+    return `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
+  }
+
+  function getTodayDisplay() {
+    // Returns today as "dd/mm/yyyy" (internal display format)
+    const now = new Date();
+    return `${pad2(now.getDate())}/${pad2(now.getMonth() + 1)}/${now.getFullYear()}`;
+  }
+
+  function dateInputToDisplay(yyyy_mm_dd) {
+    // "yyyy-mm-dd" -> "dd/mm/yyyy". Returns '' for empty/invalid input.
+    if (!yyyy_mm_dd || !/^\d{4}-\d{2}-\d{2}$/.test(yyyy_mm_dd)) return '';
+    const [y, m, d] = yyyy_mm_dd.split('-');
+    return `${d}/${m}/${y}`;
+  }
+
+  function displayToDateInput(dd_mm_yyyy) {
+    // "dd/mm/yyyy" -> "yyyy-mm-dd". Returns '' for empty/invalid input.
+    if (!dd_mm_yyyy || !/^\d{2}\/\d{2}\/\d{4}$/.test(dd_mm_yyyy)) return '';
+    const [d, m, y] = dd_mm_yyyy.split('/');
+    return `${y}-${m}-${d}`;
+  }
+
+  // Check if a person has already been marked attendance on a given date.
+  // Uses attendanceByPersonMap (populated from the "diemdanh" status tab).
+  function hasAttendedOnDate(hoTen, dateStr) {
+    if (!hoTen || !dateStr) return false;
+    const key = normalize(hoTen);
+    const dates = attendanceByPersonMap.get(key);
+    return dates ? dates.has(dateStr) : false;
   }
 
   function escapeHtml(s) {
@@ -818,6 +987,7 @@
         certificate: getCellValue(row, colMap.CHUNG_NHAN),
         expectations: getCellValue(row, colMap.MONG_MUON),
         studentId: getCellValue(row, colMap.MA_SV),
+        voPhuc: colMap.VO_PHUC != null ? getCellValue(row, colMap.VO_PHUC) : '',
         note: colMap.NOTE != null ? getCellValue(row, colMap.NOTE) : ''
       });
     });
@@ -907,8 +1077,8 @@
       $errorBox.hide();
       updateProgress(0);
 
-      // Total sheets to load: 1 main + 9 registration + 2 exam + 1 BCN + 1 NTNT = 14
-      const TOTAL_SHEETS = 14;
+      // Total sheets to load: 1 main + 10 registration + 2 exam + 1 BCN + 1 NTNT = 15
+      const TOTAL_SHEETS = 15;
       let loadedCount = 0;
       const tick = () => { loadedCount++; updateProgress((loadedCount / TOTAL_SHEETS) * 100); };
       $results.empty();
@@ -952,14 +1122,15 @@
       } catch (regErr) {
         console.warn('Registration sheet 3 (GEN16) unavailable:', regErr);
       }
-      // Load additional registration sheets (5-10)
+      // Load additional registration sheets (5-11)
       const extraSheets = [
         { url: SHEET5_URL,  colMap: SHEET5_COL,  name: 'sheet 4' },
         { url: SHEET6_URL,  colMap: SHEET6_COL,  name: 'sheet 5' },
         { url: SHEET7_URL,  colMap: SHEET7_COL,  name: 'sheet 6' },
         { url: SHEET8_URL,  colMap: SHEET8_COL,  name: 'sheet 7' },
         { url: SHEET9_URL,  colMap: SHEET9_COL,  name: 'sheet 8' },
-        { url: SHEET10_URL, colMap: SHEET10_COL, name: 'sheet 9' }
+        { url: SHEET10_URL, colMap: SHEET10_COL, name: 'sheet 9' },
+        { url: SHEET11_URL, colMap: SHEET11_COL, name: 'sheet 10 (mới nhất)' }
       ];
         for (const s of extraSheets) {
           try {
@@ -1118,6 +1289,9 @@
 
     // Update any buttons already rendered (in case user searched before status loaded)
     updateButtonStates();
+
+    // Update the fund summary card at the top of the page
+    updateFundSummary();
   }
 
   // Update existing attendance/fund buttons based on loaded status.
@@ -1127,10 +1301,11 @@
       const $btn = $(this);
       if ($btn.prop('disabled')) return; // already disabled
       const hoTen = $btn.data('ho-ten');
-      if (hoTen && attendanceTodaySet.has(normalize(hoTen))) {
+      if (hoTen && hasAttendedOnDate(hoTen, selectedAttendanceDate)) {
         $btn.removeClass('btn-primary').addClass('btn-success')
           .prop('disabled', true)
-          .html('<i class="fa fa-check"></i> Đã điểm danh hôm nay');
+          .attr('title', 'Đã điểm danh ngày ' + selectedAttendanceDate)
+          .html('<i class="fa fa-check"></i> Đã điểm danh');
       }
     });
     $('.close-fund-btn').each(function () {
@@ -1140,7 +1315,8 @@
       if (hoTen && fundThisMonthSet.has(normalize(hoTen))) {
         $btn.removeClass('btn-warning').addClass('btn-success')
           .prop('disabled', true)
-          .html('<i class="fa fa-check"></i> Đã đóng quỹ tháng này');
+          .attr('title', 'Đã đóng quỹ tháng này')
+          .html('<i class="fa fa-check"></i> Đã đóng quỹ');
       }
     });
   }
@@ -1241,6 +1417,9 @@
     }
     if (reg.expectations) {
       items.push(`<div class="field"><i class="fas fa-star"></i><strong>Mong muốn:</strong> ${escapeHtml(reg.expectations)}</div>`);
+    }
+    if (reg.voPhuc) {
+      items.push(`<div class="field"><i class="fas fa-tshirt"></i><strong>Võ phục:</strong> ${escapeHtml(reg.voPhuc)}</div>`);
     }
     if (reg.note) {
       items.push(`<div class="field"><i class="fas fa-sticky-note"></i><strong>Ghi chú:</strong> ${escapeHtml(reg.note)}</div>`);
@@ -1387,28 +1566,32 @@
             ${hieuLuc ? `<div class="field"><i class="fas fa-check-circle"></i><strong>Hiệu lực:</strong> ${escapeHtml(hieuLuc)}</div>` : ''}
             ${regFieldsHtml}
             ${extraFieldsHtml}
-            ${attendanceTodaySet.has(normalize(hoTen))
-              ? `<button class="btn btn-sm btn-success attendance-btn mt-2 w-100" disabled>
-                   <i class="fa fa-check"></i> Đã điểm danh hôm nay
-                 </button>`
-              : `<button class="btn btn-sm btn-primary attendance-btn mt-2 w-100"
-                       data-ho-ten="${escapeHtml(hoTen)}"
-                       data-ma-hv="${escapeHtml(maHV)}"
-                       data-ngay-sinh="${escapeHtml(ngaySinh)}"
-                       data-cap-dai="${escapeHtml(updatedCapDai || capDai || '')}">
-                   <i class="fa fa-calendar-check"></i> Điểm danh hôm nay
-                 </button>`}
-            ${fundThisMonthSet.has(normalize(hoTen))
-              ? `<button class="btn btn-sm btn-success close-fund-btn mt-1 w-100" disabled>
-                   <i class="fa fa-check"></i> Đã đóng quỹ tháng này
-                 </button>`
-              : `<button class="btn btn-sm btn-warning close-fund-btn mt-1 w-100"
-                       data-ho-ten="${escapeHtml(hoTen)}"
-                       data-ma-hv="${escapeHtml(maHV)}"
-                       data-ngay-sinh="${escapeHtml(ngaySinh)}"
-                       data-cap-dai="${escapeHtml(updatedCapDai || capDai || '')}">
-                   <i class="fa fa-coins"></i> Đóng quỹ tháng này
-                 </button>`}
+            <div class="action-buttons-row">
+              ${hasAttendedOnDate(hoTen, selectedAttendanceDate)
+                ? `<button class="btn btn-sm btn-success attendance-btn" disabled title="Đã điểm danh ngày ${escapeHtml(selectedAttendanceDate)}">
+                     <i class="fa fa-check"></i> Đã điểm danh
+                   </button>`
+                : `<button class="btn btn-sm btn-primary attendance-btn"
+                         data-ho-ten="${escapeHtml(hoTen)}"
+                         data-ma-hv="${escapeHtml(maHV)}"
+                         data-ngay-sinh="${escapeHtml(ngaySinh)}"
+                         data-cap-dai="${escapeHtml(updatedCapDai || capDai || '')}"
+                         title="Điểm danh ngày ${escapeHtml(selectedAttendanceDate)}">
+                     <i class="fa fa-calendar-check"></i> Điểm danh
+                   </button>`}
+              ${fundThisMonthSet.has(normalize(hoTen))
+                ? `<button class="btn btn-sm btn-success close-fund-btn" disabled title="Đã đóng quỹ tháng này">
+                     <i class="fa fa-check"></i> Đã đóng quỹ
+                   </button>`
+                : `<button class="btn btn-sm btn-warning close-fund-btn"
+                         data-ho-ten="${escapeHtml(hoTen)}"
+                         data-ma-hv="${escapeHtml(maHV)}"
+                         data-ngay-sinh="${escapeHtml(ngaySinh)}"
+                         data-cap-dai="${escapeHtml(updatedCapDai || capDai || '')}"
+                         title="Đóng quỹ tháng này">
+                     <i class="fa fa-coins"></i> Đóng quỹ
+                   </button>`}
+            </div>
           </div>
         </div>
       </div>
@@ -1449,28 +1632,32 @@
             <hr class="my-2">
             ${reg.dob ? `<div class="field field-keep"><i class="fas fa-birthday-cake"></i><strong>Ngày sinh:</strong> ${escapeHtml(reg.dob)}</div>` : ''}
             ${regFieldsHtml}
-            ${attendanceTodaySet.has(normalize(reg.name))
-              ? `<button class="btn btn-sm btn-success attendance-btn mt-2 w-100" disabled>
-                   <i class="fa fa-check"></i> Đã điểm danh hôm nay
-                 </button>`
-              : `<button class="btn btn-sm btn-primary attendance-btn mt-2 w-100"
-                       data-ho-ten="${escapeHtml(reg.name)}"
-                       data-ma-hv=""
-                       data-ngay-sinh="${escapeHtml(reg.dob || '')}"
-                       data-cap-dai="">
-                   <i class="fa fa-calendar-check"></i> Điểm danh hôm nay
-                 </button>`}
-            ${fundThisMonthSet.has(normalize(reg.name))
-              ? `<button class="btn btn-sm btn-success close-fund-btn mt-1 w-100" disabled>
-                   <i class="fa fa-check"></i> Đã đóng quỹ tháng này
-                 </button>`
-              : `<button class="btn btn-sm btn-warning close-fund-btn mt-1 w-100"
-                       data-ho-ten="${escapeHtml(reg.name)}"
-                       data-ma-hv=""
-                       data-ngay-sinh="${escapeHtml(reg.dob || '')}"
-                       data-cap-dai="">
-                   <i class="fa fa-coins"></i> Đóng quỹ tháng này
-                 </button>`}
+            <div class="action-buttons-row">
+              ${hasAttendedOnDate(reg.name, selectedAttendanceDate)
+                ? `<button class="btn btn-sm btn-success attendance-btn" disabled title="Đã điểm danh ngày ${escapeHtml(selectedAttendanceDate)}">
+                     <i class="fa fa-check"></i> Đã điểm danh
+                   </button>`
+                : `<button class="btn btn-sm btn-primary attendance-btn"
+                         data-ho-ten="${escapeHtml(reg.name)}"
+                         data-ma-hv=""
+                         data-ngay-sinh="${escapeHtml(reg.dob || '')}"
+                         data-cap-dai=""
+                         title="Điểm danh ngày ${escapeHtml(selectedAttendanceDate)}">
+                     <i class="fa fa-calendar-check"></i> Điểm danh
+                   </button>`}
+              ${fundThisMonthSet.has(normalize(reg.name))
+                ? `<button class="btn btn-sm btn-success close-fund-btn" disabled title="Đã đóng quỹ tháng này">
+                     <i class="fa fa-check"></i> Đã đóng quỹ
+                   </button>`
+                : `<button class="btn btn-sm btn-warning close-fund-btn"
+                         data-ho-ten="${escapeHtml(reg.name)}"
+                         data-ma-hv=""
+                         data-ngay-sinh="${escapeHtml(reg.dob || '')}"
+                         data-cap-dai=""
+                         title="Đóng quỹ tháng này">
+                     <i class="fa fa-coins"></i> Đóng quỹ
+                   </button>`}
+            </div>
           </div>
         </div>
       </div>
@@ -1481,15 +1668,57 @@
   // ===== Events =====
   $searchBtn.on('click', performSearch);
   $reloadBtn.on('click', loadData);
-  $searchInput.on('keypress', function (e) {
-    if (e.which === 13) { performSearch(); $searchYearInput.focus(); }
+
+  // ===== Attendance date picker =====
+  // Initialize the date picker to today (max = today, no future dates).
+  const $attendanceDateInput = $('#attendanceDateInput');
+  const todayInput = getTodayInput();
+  $attendanceDateInput.attr('max', todayInput).val(todayInput);
+  selectedAttendanceDate = getTodayDisplay();
+
+  // When the user picks a different date, update state and re-render buttons.
+  $attendanceDateInput.on('change', function () {
+    const picked = $(this).val() || todayInput;
+    selectedAttendanceDate = dateInputToDisplay(picked);
+    // Re-render any visible cards so the "Đã điểm danh" state matches the new date.
+    if (allRows.length > 0 || registrationMap.size > 0) {
+      performSearch();
+    } else {
+      updateButtonStates();
+    }
   });
-  $searchYearInput.on('keypress', function (e) {
-    if (e.which === 13) performSearch();
-  });
+
+  // Debounced auto-search: trigger search ~300ms after the user stops typing.
+  // This avoids running a search on every single keystroke while still feeling instant.
+  let searchDebounceTimer = null;
+  function scheduleAutoSearch() {
+    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(() => {
+      searchDebounceTimer = null;
+      performSearch();
+    }, 300);
+  }
+
+  $searchInput.on('input', scheduleAutoSearch);
   $searchYearInput.on('input', function () {
     // Only allow digits, max 4 chars
     this.value = this.value.replace(/[^0-9]/g, '').substring(0, 4);
+    scheduleAutoSearch();
+  });
+
+  // Enter key: skip debounce, search immediately
+  $searchInput.on('keypress', function (e) {
+    if (e.which === 13) {
+      if (searchDebounceTimer) { clearTimeout(searchDebounceTimer); searchDebounceTimer = null; }
+      performSearch();
+      $searchYearInput.focus();
+    }
+  });
+  $searchYearInput.on('keypress', function (e) {
+    if (e.which === 13) {
+      if (searchDebounceTimer) { clearTimeout(searchDebounceTimer); searchDebounceTimer = null; }
+      performSearch();
+    }
   });
 
   // ===== Collapse / Expand toggle =====
@@ -1530,7 +1759,7 @@
     'MA_GAL', 'MA_GSGK', 'MA_HV_CU', 'GHI_CHU',
     'BCN', 'NTNT',
     'DK_TRUONG', 'DK_MA_SV', 'DK_FACEBOOK', 'DK_NGUON_BIET', 'DK_DA_HOC',
-    'DK_CHUNG_NHAN', 'DK_MONG_MUON', 'DK_GHI_CHU',
+    'DK_CHUNG_NHAN', 'DK_MONG_MUON', 'DK_VO_PHUC', 'DK_GHI_CHU',
     'TIMESTAMP_GHI'
   ];
 
@@ -1587,6 +1816,7 @@
       reg.learned || '',
       reg.certificate || '',
       reg.expectations || '',
+      reg.voPhuc || '',
       reg.note || '',
       timestamp
     ];
@@ -1631,6 +1861,7 @@
       reg.learned || '',
       reg.certificate || '',
       reg.expectations || '',
+      reg.voPhuc || '',
       reg.note || '',
       timestamp
     ];
@@ -1825,7 +2056,11 @@
         if (!fundByPersonMap.has(key)) fundByPersonMap.set(key, new Set());
         fundByPersonMap.get(key).add(thang);
         $btn.removeClass('btn-warning').addClass('btn-success')
-          .html('<i class="fa fa-check"></i> Đã đóng quỹ ' + thang);
+          .prop('disabled', true)
+          .attr('title', 'Đã đóng quỹ ' + thang)
+          .html('<i class="fa fa-check"></i> Đã đóng quỹ');
+        // Refresh the fund summary at the top of the page
+        updateFundSummary();
         if (assumedSuccess) {
           setTimeout(() => alert('Đã ghi (không xác nhận được từ server - kiểm tra sheet nếu cần)'), 50);
         }
@@ -1836,7 +2071,11 @@
         if (!fundByPersonMap.has(key)) fundByPersonMap.set(key, new Set());
         fundByPersonMap.get(key).add(thang);
         $btn.removeClass('btn-warning').addClass('btn-success')
-          .html('<i class="fa fa-check"></i> Đã đóng quỹ ' + thang);
+          .prop('disabled', true)
+          .attr('title', 'Đã đóng quỹ ' + thang)
+          .html('<i class="fa fa-check"></i> Đã đóng quỹ');
+        // Refresh the fund summary at the top of the page
+        updateFundSummary();
         alert(result.error || `${hoTen} đã đóng quỹ tháng ${thang} rồi.`);
       } else {
         // Build informative error message
@@ -1857,13 +2096,18 @@
         console.warn('[closeFundForMember] Fetch timeout - assuming success');
         fundThisMonthSet.add(normalize(hoTen));
         $btn.removeClass('btn-warning').addClass('btn-success')
-          .html('<i class="fa fa-check"></i> Đã đóng quỹ ' + thang);
+          .prop('disabled', true)
+          .attr('title', 'Đã đóng quỹ ' + thang)
+          .html('<i class="fa fa-check"></i> Đã đóng quỹ');
+        // Refresh the fund summary at the top of the page
+        updateFundSummary();
         setTimeout(() => alert('Đã ghi (timeout - kiểm tra sheet nếu cần)'), 50);
         return;
       }
       alert('Lỗi khi đóng quỹ: ' + err.message);
       $btn.prop('disabled', false)
-        .html('<i class="fa fa-coins"></i> Đóng quỹ tháng này');
+        .attr('title', 'Đóng quỹ tháng này')
+        .html('<i class="fa fa-coins"></i> Đóng quỹ');
       console.error('[closeFundForMember] error:', err);
     }
   }
@@ -2135,8 +2379,9 @@
   });
 
   // ===== Attendance (điểm danh) =====
-  // Click handler for the "Điểm danh hôm nay" button inside each member card.
+  // Click handler for the "Điểm danh" button inside each member card.
   // Uses event delegation since cards are dynamically rendered.
+  // The date written is the one selected in #attendanceDateInput (defaults to today).
   async function markAttendance($btn) {
     if (!EXPORT_SCRIPT_URL) {
       alert('Chưa cấu hình EXPORT_SCRIPT_URL. Xem hướng dẫn trong nút "Ghi vào Sheet".');
@@ -2153,9 +2398,10 @@
       return;
     }
 
-    // Format today's date as dd/mm/yyyy (Vietnamese locale)
+    // Use the date selected in the date picker (dd/mm/yyyy). Fall back to today
+    // if the picker is empty (shouldn't happen, but be safe).
+    const dateStr = selectedAttendanceDate || getTodayDisplay();
     const now = new Date();
-    const dateStr = now.toLocaleDateString('vi-VN');
 
     // Disable button + show spinner
     $btn.prop('disabled', true)
@@ -2212,12 +2458,15 @@
       if (result && result.success) {
         // Add to set so future card renders know this person already attended
         const key = normalize(hoTen);
-        attendanceTodaySet.add(key);
+        // Keep attendanceTodaySet in sync if the selected date IS today
+        if (dateStr === getTodayDisplay()) attendanceTodaySet.add(key);
         if (!attendanceByPersonMap.has(key)) attendanceByPersonMap.set(key, new Set());
         attendanceByPersonMap.get(key).add(dateStr);
         // Visual feedback: change to "Đã điểm danh" with check icon (green)
         $btn.removeClass('btn-primary').addClass('btn-success')
-          .html('<i class="fa fa-check"></i> Đã điểm danh ' + dateStr);
+          .prop('disabled', true)
+          .attr('title', 'Đã điểm danh ' + dateStr)
+          .html('<i class="fa fa-check"></i> Đã điểm danh');
         if (assumedSuccess) {
           // Show a soft warning that we couldn't verify the response
           setTimeout(() => alert('Đã ghi (không xác nhận được từ server - kiểm tra sheet nếu cần)'), 50);
@@ -2225,12 +2474,14 @@
       } else if (result && result.duplicate) {
         // Add to set (in case it wasn't there yet)
         const key = normalize(hoTen);
-        attendanceTodaySet.add(key);
+        if (dateStr === getTodayDisplay()) attendanceTodaySet.add(key);
         if (!attendanceByPersonMap.has(key)) attendanceByPersonMap.set(key, new Set());
         attendanceByPersonMap.get(key).add(dateStr);
-        // Already marked attendance today - show as already done (green)
+        // Already marked attendance on this date - show as already done (green)
         $btn.removeClass('btn-primary').addClass('btn-success')
-          .html('<i class="fa fa-check"></i> Đã điểm danh ' + dateStr);
+          .prop('disabled', true)
+          .attr('title', 'Đã điểm danh ' + dateStr)
+          .html('<i class="fa fa-check"></i> Đã điểm danh');
         alert(result.error || 'Đã điểm danh rồi.');
       } else {
         // Build informative error message
@@ -2250,16 +2501,22 @@
       if (err.name === 'AbortError') {
         // Fetch timed out - assume success since Apps Script often hangs on response
         console.warn('[markAttendance] Fetch timeout - assuming success');
-        attendanceTodaySet.add(normalize(hoTen));
+        const key = normalize(hoTen);
+        if (dateStr === getTodayDisplay()) attendanceTodaySet.add(key);
+        if (!attendanceByPersonMap.has(key)) attendanceByPersonMap.set(key, new Set());
+        attendanceByPersonMap.get(key).add(dateStr);
         $btn.removeClass('btn-primary').addClass('btn-success')
-          .html('<i class="fa fa-check"></i> Đã điểm danh ' + dateStr);
+          .prop('disabled', true)
+          .attr('title', 'Đã điểm danh ' + dateStr)
+          .html('<i class="fa fa-check"></i> Đã điểm danh');
         setTimeout(() => alert('Đã ghi (timeout - kiểm tra sheet nếu cần)'), 50);
         return;
       }
       alert('Lỗi khi điểm danh: ' + msg);
       // Re-enable button on error
       $btn.prop('disabled', false)
-        .html('<i class="fa fa-calendar-check"></i> Điểm danh hôm nay');
+        .attr('title', 'Điểm danh hôm nay')
+        .html('<i class="fa fa-calendar-check"></i> Điểm danh');
       console.error('[markAttendance] error:', err);
     }
   }
@@ -2466,6 +2723,8 @@
         if ((result.written || []).includes(currentThang)) {
           fundThisMonthSet.add(personKey);
           updateButtonStates();
+          // Refresh the fund summary at the top of the page
+          updateFundSummary();
         }
 
         $('#multiFundModal').modal('hide');
@@ -2481,6 +2740,8 @@
         if (months.some(m => m.thang === currentThang)) {
           fundThisMonthSet.add(normalize(multiFundState.hoTen));
           updateButtonStates();
+          // Refresh the fund summary at the top of the page
+          updateFundSummary();
         }
         alert('Đã ghi (timeout - kiểm tra sheet nếu cần)');
         $('#multiFundModal').modal('hide');
