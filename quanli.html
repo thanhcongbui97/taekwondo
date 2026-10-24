@@ -2284,9 +2284,11 @@
     const $btn = $(this);
     $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Đang ghi...');
 
+    // Timestamp = ngày giờ hiện tại (cùng một lúc ghi cho tất cả các ngày được chọn)
+    const now = new Date();
     const dates = Array.from(multiAttState.selectedDates).sort().map(d => ({
       date: d,
-      timestamp: new Date(d.split('/').reverse().join('-') + 'T08:00:00').toISOString()
+      timestamp: now.toISOString()
     }));
 
     const controller = new AbortController();
@@ -2652,12 +2654,14 @@
     const $btn = $(this);
     $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Đang ghi...');
 
+    // Timestamp = ngày giờ hiện tại (cùng một lúc ghi cho tất cả các tháng được chọn)
+    const now = new Date();
     const months = Array.from(multiFundState.selectedMonths).sort().map(t => {
       const [mm, yyyy] = t.split('/');
       return {
         thang: t,
         date: '01/' + t, // first day of month as NGAY
-        timestamp: new Date(parseInt(yyyy), parseInt(mm) - 1, 1, 8, 0, 0).toISOString()
+        timestamp: now.toISOString()
       };
     });
 

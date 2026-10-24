@@ -25,6 +25,18 @@
             border-radius: 8px;
             font-size: 0.95rem;
             color: #555;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .stats-bar .stats-left {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        .stats-bar .stats-right {
+            flex: 0 0 auto;
         }
         .stats-bar .stat-item {
             display: inline-block;
@@ -33,6 +45,30 @@
         .stats-bar .stat-item strong {
             color: #33b5e5;
             font-size: 1.1rem;
+        }
+        .stats-bar .fund-filter-label {
+            font-size: 0.85rem;
+            color: #888;
+            margin-right: 6px;
+            font-weight: 600;
+        }
+        /* Ensure filter button active state is clearly visible.
+           Higher specificity than Bootstrap's default to override any MDB overrides. */
+        .stats-bar [data-fund-filter].active.btn-outline-success,
+        .stats-bar [data-fund-filter].active.btn-outline-success:focus,
+        .stats-bar [data-fund-filter].active.btn-outline-success:active {
+            color: #fff;
+            background-color: #28a745;
+            border-color: #28a745;
+            box-shadow: none;
+        }
+        .stats-bar [data-fund-filter].active.btn-outline-warning,
+        .stats-bar [data-fund-filter].active.btn-outline-warning:focus,
+        .stats-bar [data-fund-filter].active.btn-outline-warning:active {
+            color: #212529;
+            background-color: #ffc107;
+            border-color: #ffc107;
+            box-shadow: none;
         }
 
         /* Month selector */
@@ -84,6 +120,31 @@
         .activity-table tbody tr:hover {
             background: #f5f5f5;
         }
+
+        /* Sortable headers */
+        .activity-table thead th.sortable {
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.15s;
+            position: relative;
+        }
+        .activity-table thead th.sortable:hover {
+            background: #2a9fd6;
+        }
+        .activity-table thead th.sortable .sort-icon {
+            margin-left: 6px;
+            opacity: 0.5;
+            font-size: 0.85em;
+            transition: opacity 0.15s;
+            display: inline-block;
+            width: 0.85em;
+        }
+        .activity-table thead th.sortable.sort-active {
+            background: #29a0d4;
+        }
+        .activity-table thead th.sortable.sort-active .sort-icon {
+            opacity: 1;
+        }
         .activity-table .fund-paid {
             color: #28a745;
             font-size: 1.3rem;
@@ -130,6 +191,27 @@
             padding: 0.5rem 0.4rem;
             white-space: nowrap;
             width: 100%;
+        }
+
+        /* Paid state: button grows taller to contain the payment dates inside.
+           Dates are shown in a smaller, slightly transparent font, one per line. */
+        .activity-table .close-fund-btn-paid {
+            white-space: normal;
+            line-height: 1.25;
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
+        .activity-table .close-fund-btn-label {
+            font-weight: 600;
+            display: block;
+        }
+        .activity-table .close-fund-btn-dates {
+            font-size: 0.7rem;
+            font-weight: 400;
+            opacity: 0.92;
+            margin-top: 2px;
+            display: block;
+            letter-spacing: 0.2px;
         }
 
         /* Fund summary card (tổng hợp quỹ) - prominent display at top of page */
@@ -273,7 +355,16 @@
           </div>
 
           <!--Stats bar-->
-          <div id="statsBar" class="stats-bar mb-3" style="display:none;"></div>
+          <div id="statsBar" class="stats-bar mb-3" style="display:none;">
+              <div class="stats-left" id="statsLeft"></div>
+              <div class="stats-right">
+                  <span class="fund-filter-label">Lọc:</span>
+                  <div class="btn-group btn-group-sm" role="group" aria-label="Lọc theo trạng thái đóng quỹ">
+                      <button type="button" class="btn btn-outline-success" data-fund-filter="paid" title="Click để lọc, click lần nữa để bỏ lọc">Đã đóng</button>
+                      <button type="button" class="btn btn-outline-warning" data-fund-filter="unpaid" title="Click để lọc, click lần nữa để bỏ lọc">Chưa đóng</button>
+                  </div>
+              </div>
+          </div>
 
           <!--Loading-->
           <div id="loading" class="text-center my-5" style="display:none;">
@@ -293,10 +384,18 @@
                       <thead>
                           <tr>
                               <th style="width: 60px;">STT</th>
-                              <th>Họ tên</th>
-                              <th style="width: 110px;">Ngày sinh</th>
-                              <th style="width: 200px;">Điểm danh</th>
-                              <th style="width: 140px;" class="text-center">Đóng quỹ</th>
+                              <th class="sortable sort-active" data-sort="name" title="Sắp xếp theo họ tên">
+                                  Họ tên <i class="fas fa-sort-up sort-icon"></i>
+                              </th>
+                              <th class="sortable" data-sort="dob" style="width: 110px;" title="Sắp xếp theo ngày sinh">
+                                  Ngày sinh <i class="fas fa-sort sort-icon"></i>
+                              </th>
+                              <th class="sortable" data-sort="count" style="width: 200px;" title="Sắp xếp theo số buổi điểm danh">
+                                  Điểm danh <i class="fas fa-sort sort-icon"></i>
+                              </th>
+                              <th class="sortable text-center" data-sort="fund" style="width: 140px;" title="Sắp xếp theo trạng thái đóng quỹ">
+                                  Đóng quỹ <i class="fas fa-sort sort-icon"></i>
+                              </th>
                               <th style="width: 80px;" class="text-center">Thao tác</th>
                           </tr>
                       </thead>
@@ -367,11 +466,16 @@
 
   // ===== State =====
   let attendanceByPersonMap = new Map(); // normalized name -> Set of "dd/mm/yyyy" dates
-  let fundByPersonMap = new Map();       // normalized name -> Set of "MM/yyyy" months
+  let fundByPersonMap = new Map();       // normalized name -> Map of "MM/yyyy" -> Set of "dd/MM/yyyy" payment dates
   let dobByPersonMap = new Map();        // normalized name -> "dd/mm/yyyy" (date of birth)
   let isLoading = false;
   let searchQuery = '';                  // current search filter (normalized)
   let currentTotalSessions = 0;          // unique dates in current view (for stats bar)
+  // Sort state: which column is currently sorted and in which direction.
+  // Default = sort by name ascending (matches the original behavior).
+  let currentSort = { column: 'name', direction: 'asc' };
+  // Fund filter: 'all' | 'paid' | 'unpaid'. Default = 'all' (show everyone).
+  let fundFilter = 'all';
 
   // ===== DOM refs =====
   const $monthSelect = $('#monthSelect');
@@ -383,6 +487,7 @@
   const $loading = $('#loading');
   const $errorBox = $('#errorBox');
   const $statsBar = $('#statsBar');
+  const $statsLeft = $('#statsLeft');
   const $resultsContainer = $('#resultsContainer');
   const $resultsBody = $('#resultsBody');
   const $emptyState = $('#emptyState');
@@ -415,8 +520,8 @@
 
     // Count unique people who paid for the selected month
     let count = 0;
-    fundByPersonMap.forEach((monthSet) => {
-      if (monthSet.has(thangKey)) count++;
+    fundByPersonMap.forEach((personMap) => {
+      if (isPaidForMonth(personMap, thangKey)) count++;
     });
 
     const total = count * FUND_AMOUNT_PER_PERSON;
@@ -458,6 +563,42 @@
       .toLowerCase()
       .normalize('NFC')
       .trim();
+  }
+
+  // Format a JavaScript Date object as "dd/MM/yyyy" (same shape as formatDate()).
+  // Used when recording a new fund payment so the history shows the real date
+  // instead of the old "01/MM/yyyy" placeholder.
+  function formatDateObj(date) {
+    const dd = String(date.getDate()).padStart(2, '0');
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const yyyy = date.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
+  }
+
+  // Check whether a person has paid the fund for the given month ("MM/yyyy").
+  // personMap is the inner Map stored in fundByPersonMap (month -> Set of dates).
+  function isPaidForMonth(personMap, thangKey) {
+    return !!(personMap && personMap.has(thangKey));
+  }
+
+  // Return the sorted list of payment dates ("dd/MM/yyyy") for the given month.
+  // Returns [] if the person hasn't paid for that month.
+  function getPaymentDatesForMonth(personMap, thangKey) {
+    if (!personMap || !personMap.has(thangKey)) return [];
+    return [...personMap.get(thangKey)].sort();
+  }
+
+  // Parse a "dd/mm/yyyy" string into a Date object. Returns null if invalid/empty.
+  // Used for sorting by date of birth.
+  function parseDob(dobStr) {
+    if (!dobStr || dobStr === '—') return null;
+    const parts = dobStr.split('/');
+    if (parts.length !== 3) return null;
+    const dd = parseInt(parts[0], 10);
+    const mm = parseInt(parts[1], 10) - 1; // JS months are 0-indexed
+    const yyyy = parseInt(parts[2], 10);
+    if (isNaN(dd) || isNaN(mm) || isNaN(yyyy)) return null;
+    return new Date(yyyy, mm, dd);
   }
 
   // ===== JSONP loader (same pattern as quanli.html) =====
@@ -541,7 +682,7 @@
         }
       });
 
-      // Parse fund: build map of normalized name -> Set of "MM/yyyy" months
+      // Parse fund: build map of normalized name -> Map of "MM/yyyy" -> Set of "dd/MM/yyyy" payment dates
       fundByPersonMap = new Map();
       const fundRows = (fundData.table.rows || []).filter(r => r.c && r.c.some(cell => cell && cell.v != null));
       fundRows.forEach(row => {
@@ -551,11 +692,15 @@
           const rowThang = ngay.substring(3, 10); // extract MM/yyyy from dd/MM/yyyy
           const key = normalize(hoTen);
           if (!fundByPersonMap.has(key)) {
-            fundByPersonMap.set(key, new Set());
+            fundByPersonMap.set(key, new Map());
           }
-          fundByPersonMap.get(key).add(rowThang);
-          if (!fundByPersonMap.get(key)._displayName) {
-            fundByPersonMap.get(key)._displayName = hoTen;
+          const personMap = fundByPersonMap.get(key);
+          if (!personMap.has(rowThang)) {
+            personMap.set(rowThang, new Set());
+          }
+          personMap.get(rowThang).add(ngay);
+          if (!personMap._displayName) {
+            personMap._displayName = hoTen;
           }
         }
       });
@@ -591,6 +736,90 @@
       $loadBtn.prop('disabled', false);
       $reloadBtn.prop('disabled', false);
     }
+  }
+
+  // ===== Sorting =====
+  // Sort the members array in-place based on currentSort state.
+  // Supports 4 columns: name (string), dob (date), count (number), fund (boolean).
+  // Empty DOBs always go to the end regardless of direction (so missing data
+  // doesn't pollute the top of the list).
+  function sortMembers(members, thangKey) {
+    const { column, direction } = currentSort;
+    const dir = direction === 'asc' ? 1 : -1;
+
+    members.sort((a, b) => {
+      let cmp = 0;
+
+      switch (column) {
+        case 'name': {
+          // Vietnamese-aware string compare
+          cmp = a.name.localeCompare(b.name, 'vi');
+          break;
+        }
+        case 'dob': {
+          const dobA = parseDob(dobByPersonMap.get(a.key));
+          const dobB = parseDob(dobByPersonMap.get(b.key));
+          // Empty DOBs always go to the end (regardless of asc/desc)
+          if (!dobA && !dobB) cmp = 0;
+          else if (!dobA) return 1;
+          else if (!dobB) return -1;
+          else cmp = dobA.getTime() - dobB.getTime();
+          break;
+        }
+        case 'count': {
+          // Numeric compare on attendance count
+          cmp = a.count - b.count;
+          break;
+        }
+        case 'fund': {
+          // Paid (1) vs unpaid (0). When ascending, paid comes first.
+          const fundA = fundByPersonMap.get(a.key);
+          const fundB = fundByPersonMap.get(b.key);
+          const paidA = isPaidForMonth(fundA, thangKey) ? 1 : 0;
+          const paidB = isPaidForMonth(fundB, thangKey) ? 1 : 0;
+          cmp = paidA - paidB;
+          break;
+        }
+      }
+
+      return cmp * dir;
+    });
+
+    return members;
+  }
+
+  // Update the sort icons on the table headers to reflect currentSort state.
+  // - Active column gets fa-sort-up (asc) or fa-sort-down (desc) at full opacity.
+  // - Inactive columns get fa-sort at reduced opacity.
+  function updateSortIcons() {
+    $('.activity-table thead th.sortable').each(function () {
+      const $th = $(this);
+      const column = $th.data('sort');
+      const $icon = $th.find('.sort-icon');
+
+      if (currentSort.column === column) {
+        $th.addClass('sort-active');
+        $icon.removeClass('fa-sort fa-sort-up fa-sort-down')
+             .addClass(currentSort.direction === 'asc' ? 'fa-sort-up' : 'fa-sort-down');
+      } else {
+        $th.removeClass('sort-active');
+        $icon.removeClass('fa-sort-up fa-sort-down').addClass('fa-sort');
+      }
+    });
+  }
+
+  // Update the active state of the fund filter buttons in the stats bar.
+  // The active button gets the `active` class (Bootstrap fills it with color);
+  // the others lose it (back to outline).
+  function updateFundFilterButtons() {
+    $('#statsBar [data-fund-filter]').each(function () {
+      const $btn = $(this);
+      if ($btn.data('fund-filter') === fundFilter) {
+        $btn.addClass('active');
+      } else {
+        $btn.removeClass('active');
+      }
+    });
   }
 
   // ===== Render table =====
@@ -637,26 +866,36 @@
     // Also include people who paid the fund for this month but did NOT attend.
     // These show up with 0 buổi and "Đã đóng quỹ" so admins can see who paid
     // without needing to attend (e.g. paid in advance, or paid for someone else).
-    fundByPersonMap.forEach((monthSet, key) => {
-      if (monthSet.has(thangKey) && !attendedKeys.has(key)) {
+    fundByPersonMap.forEach((personMap, key) => {
+      if (isPaidForMonth(personMap, thangKey) && !attendedKeys.has(key)) {
         allMembers.push({
           key: key,
-          name: monthSet._displayName || key,
+          name: personMap._displayName || key,
           dates: [],
           count: 0
         });
       }
     });
 
-    // Sort by name (Vietnamese-aware: just use localeCompare)
-    allMembers.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+    // Sort by the currently selected column/direction (default: name asc)
+    sortMembers(allMembers, thangKey);
 
     // Apply search filter (if any)
-    const members = searchQuery
+    let members = searchQuery
       ? allMembers.filter(m => normalize(m.name).includes(searchQuery))
       : allMembers;
 
-    // Update stats (reflect filtered results when searching)
+    // Apply fund filter (paid/unpaid) - applied AFTER search so stats reflect
+    // the final visible rows.
+    if (fundFilter !== 'all') {
+      members = members.filter(m => {
+        const personMap = fundByPersonMap.get(m.key);
+        const isPaid = isPaidForMonth(personMap, thangKey);
+        return fundFilter === 'paid' ? isPaid : !isPaid;
+      });
+    }
+
+    // Update stats (reflect filtered results when searching/filtering)
     const totalAttended = members.length;
     // Count unique dates across all (filtered) members - 2 people on same day = 1 session
     const uniqueDates = new Set();
@@ -664,18 +903,19 @@
     const totalSessions = uniqueDates.size;
     currentTotalSessions = totalSessions; // store for updateStatsBar()
     const totalFundPaid = members.filter(m => {
-      const fundSet = fundByPersonMap.get(m.key);
-      return fundSet && fundSet.has(thangKey);
+      const personMap = fundByPersonMap.get(m.key);
+      return isPaidForMonth(personMap, thangKey);
     }).length;
 
     let statsHtml = `<i class="fas fa-calendar-check"></i> Tháng <strong>${selectedMonth}/${selectedYear}</strong>: ` +
       `<span class="stat-item"><strong>${totalAttended}</strong> thành viên</span>` +
       `<span class="stat-item"><strong>${totalSessions}</strong> buổi tổng cộng</span>` +
       `<span class="stat-item"><strong>${totalFundPaid}</strong>/${totalAttended} đã đóng quỹ</span>`;
-    if (searchQuery && allMembers.length > members.length) {
+    if ((searchQuery || fundFilter !== 'all') && allMembers.length > members.length) {
       statsHtml += ` <span class="stat-item text-muted"><i>(lọc từ ${allMembers.length} người)</i></span>`;
     }
-    $statsBar.html(statsHtml).show();
+    $statsLeft.html(statsHtml);
+    $statsBar.show();
 
     // Render table
     if (allMembers.length === 0) {
@@ -687,10 +927,21 @@
     }
 
     if (members.length === 0) {
-      // Has data but search filtered everything out
+      // Has data but filters removed everything. Build a descriptive message
+      // that mentions whichever filters are active.
       $resultsContainer.hide();
       $emptyState.hide();
-      $searchQueryDisplay.text($searchInput.val());
+
+      const filterParts = [];
+      if (searchQuery) filterParts.push(`khớp với "${$searchInput.val()}"`);
+      if (fundFilter === 'paid') filterParts.push('đã đóng quỹ');
+      if (fundFilter === 'unpaid') filterParts.push('chưa đóng quỹ');
+
+      let msg = 'Không tìm thấy thành viên nào';
+      if (filterParts.length > 0) msg += ' ' + filterParts.join(' và ');
+      msg += '.';
+
+      $searchQueryDisplay.text(msg);
       $noSearchResults.show();
       return;
     }
@@ -701,13 +952,20 @@
     $resultsBody.empty();
 
     members.forEach((m, idx) => {
-      const fundSet = fundByPersonMap.get(m.key);
-      const isFundPaid = fundSet && fundSet.has(thangKey);
-      // Fund button: clickable if not paid, disabled if paid
+      const personMap = fundByPersonMap.get(m.key);
+      const isFundPaid = isPaidForMonth(personMap, thangKey);
+      // Build the payment dates list shown INSIDE the "Đã đóng quỹ" button.
+      // Each date is rendered on its own line in dd/MM/yyyy format (full year).
+      const paymentDates = isFundPaid ? getPaymentDatesForMonth(personMap, thangKey) : [];
+      const datesHtml = paymentDates.map(d =>
+        `<div class="close-fund-btn-dates">${d}</div>`
+      ).join('');
+      // Fund button: clickable if not paid, disabled if paid.
+      // Paid button grows taller to contain the dates inside it.
       const fundBtn = isFundPaid
-        ? `<button class="btn btn-sm btn-success close-fund-btn" disabled
+        ? `<button class="btn btn-sm btn-success close-fund-btn close-fund-btn-paid" disabled
              title="Đã đóng quỹ tháng ${selectedMonth}/${selectedYear}">
-             <i class="fa fa-check"></i> Đã đóng quỹ
+             <div class="close-fund-btn-label"><i class="fa fa-check"></i> Đã đóng quỹ</div>${datesHtml}
            </button>`
         : `<button class="btn btn-sm btn-warning close-fund-btn"
              data-ho-ten="${escapeHtml(m.name)}"
@@ -778,8 +1036,10 @@
       return;
     }
 
-    // Date = first day of the selected month (dd/mm/yyyy)
-    const dateStr = '01/' + thang;
+    // Date = actual current date (dd/MM/yyyy). The month key (thang) is what
+    // determines which month the payment is recorded against, so paying on
+    // Sep 28 for October still counts as an October payment.
+    const dateStr = formatDateObj(new Date());
 
     if (!confirm(`Đóng quỹ tháng ${thang} cho ${hoTen}?`)) {
       return;
@@ -833,18 +1093,33 @@
       if (result && (result.success || result.duplicate)) {
         // Update local state
         const key = normalize(hoTen);
-        if (!fundByPersonMap.has(key)) fundByPersonMap.set(key, new Set());
-        fundByPersonMap.get(key).add(thang);
+        if (!fundByPersonMap.has(key)) fundByPersonMap.set(key, new Map());
+        const personMap = fundByPersonMap.get(key);
+        if (!personMap.has(thang)) personMap.set(thang, new Set());
+        personMap.get(thang).add(dateStr);
 
-        // Replace the fund cell with the "Đã đóng quỹ" button
         const $row = $btn.closest('tr');
-        const $fundCell = $row.find('td').eq(3); // 4th cell (0-indexed: STT, name, attendance, fund)
-        const [mm, yyyy] = thang.split('/');
-        $fundCell.html(
-          '<button class="btn btn-sm btn-success close-fund-btn" disabled ' +
-          'title="Đã đóng quỹ tháng ' + mm + '/' + yyyy + '">' +
-          '<i class="fa fa-check"></i> Đã đóng quỹ</button>'
-        );
+
+        // If the current filter is "Chưa đóng", this row no longer matches
+        // (the person just became paid), so remove it from the DOM.
+        // Otherwise, just swap the button to the green "Đã đóng quỹ" state.
+        if (fundFilter === 'unpaid') {
+          $row.remove();
+        } else {
+          // Column index 4 = "Đóng quỹ" (0: STT, 1: Họ tên, 2: Ngày sinh, 3: Điểm danh, 4: Đóng quỹ, 5: Thao tác)
+          const $fundCell = $row.find('td').eq(4);
+          const [mm, yyyy] = thang.split('/');
+          const updatedDates = getPaymentDatesForMonth(personMap, thang);
+          const updatedDatesHtml = updatedDates.map(d =>
+            '<div class="close-fund-btn-dates">' + d + '</div>'
+          ).join('');
+          $fundCell.html(
+            '<button class="btn btn-sm btn-success close-fund-btn close-fund-btn-paid" disabled ' +
+            'title="Đã đóng quỹ tháng ' + mm + '/' + yyyy + '">' +
+            '<div class="close-fund-btn-label"><i class="fa fa-check"></i> Đã đóng quỹ</div>' + updatedDatesHtml +
+            '</button>'
+          );
+        }
 
         // Update stats bar
         updateStatsBar();
@@ -863,17 +1138,31 @@
         // Timeout - assume success
         console.warn('[closeFundForActivityMember] Fetch timeout - assuming success');
         const key = normalize(hoTen);
-        if (!fundByPersonMap.has(key)) fundByPersonMap.set(key, new Set());
-        fundByPersonMap.get(key).add(thang);
+        if (!fundByPersonMap.has(key)) fundByPersonMap.set(key, new Map());
+        const personMap = fundByPersonMap.get(key);
+        if (!personMap.has(thang)) personMap.set(thang, new Set());
+        personMap.get(thang).add(dateStr);
 
         const $row = $btn.closest('tr');
-        const $fundCell = $row.find('td').eq(3);
-        const [mm, yyyy] = thang.split('/');
-        $fundCell.html(
-          '<button class="btn btn-sm btn-success close-fund-btn" disabled ' +
-          'title="Đã đóng quỹ tháng ' + mm + '/' + yyyy + '">' +
-          '<i class="fa fa-check"></i> Đã đóng quỹ</button>'
-        );
+        // Same logic as the success path: remove row if filter is "Chưa đóng",
+        // otherwise just swap the button.
+        if (fundFilter === 'unpaid') {
+          $row.remove();
+        } else {
+          // Column index 4 = "Đóng quỹ" (0: STT, 1: Họ tên, 2: Ngày sinh, 3: Điểm danh, 4: Đóng quỹ, 5: Thao tác)
+          const $fundCell = $row.find('td').eq(4);
+          const [mm, yyyy] = thang.split('/');
+          const updatedDates = getPaymentDatesForMonth(personMap, thang);
+          const updatedDatesHtml = updatedDates.map(d =>
+            '<div class="close-fund-btn-dates">' + d + '</div>'
+          ).join('');
+          $fundCell.html(
+            '<button class="btn btn-sm btn-success close-fund-btn close-fund-btn-paid" disabled ' +
+            'title="Đã đóng quỹ tháng ' + mm + '/' + yyyy + '">' +
+            '<div class="close-fund-btn-label"><i class="fa fa-check"></i> Đã đóng quỹ</div>' + updatedDatesHtml +
+            '</button>'
+          );
+        }
         updateStatsBar();
         setTimeout(() => alert('Đã ghi (timeout - kiểm tra sheet nếu cần)'), 50);
         return;
@@ -898,7 +1187,8 @@
     // Count disabled (paid) close-fund buttons
     const totalFundPaid = $resultsBody.find('.close-fund-btn[disabled]').length;
 
-    $statsBar.html(
+    // Only update the left side - the right side (filter buttons) is static
+    $statsLeft.html(
       `<i class="fas fa-calendar-check"></i> Tháng <strong>${selectedMonth}/${selectedYear}</strong>: ` +
       `<span class="stat-item"><strong>${totalAttended}</strong> thành viên</span>` +
       `<span class="stat-item"><strong>${totalSessions}</strong> buổi tổng cộng</span>` +
@@ -955,6 +1245,38 @@
     $resultsBody.on('click', '.close-fund-link', function (e) {
       e.preventDefault();
       closeFundForActivityMember($(this));
+    });
+
+    // Sortable header click - toggle direction if same column, otherwise switch column (asc)
+    $('.activity-table thead').on('click', 'th.sortable', function () {
+      const column = $(this).data('sort');
+      if (!column) return;
+      if (currentSort.column === column) {
+        // Same column: toggle direction
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+      } else {
+        // New column: start with ascending
+        currentSort.column = column;
+        currentSort.direction = 'asc';
+      }
+      updateSortIcons();
+      renderTable();
+    });
+
+    // Fund filter buttons (Đã đóng / Chưa đóng) in the stats bar.
+    // Toggle behavior: first click applies the filter, second click on the
+    // same button removes it (back to 'all' = show everyone).
+    $('#statsBar').on('click', '[data-fund-filter]', function () {
+      const filter = $(this).data('fund-filter');
+      if (!filter) return;
+      // Toggle: if clicking the currently active filter, clear it
+      if (fundFilter === filter) {
+        fundFilter = 'all';
+      } else {
+        fundFilter = filter;
+      }
+      updateFundFilterButtons();
+      renderTable();
     });
 
     // Load data on page load
