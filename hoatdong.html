@@ -131,6 +131,57 @@
             white-space: nowrap;
             width: 100%;
         }
+
+        /* Fund summary card (tổng hợp quỹ) - prominent display at top of page */
+        .fund-summary {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff3cc 100%);
+            border-left: 4px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+        .fund-summary .fund-icon {
+            font-size: 3rem;
+            color: #ffc107;
+        }
+        .fund-summary .fund-label {
+            font-size: 0.8rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .fund-summary .fund-month {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        .fund-summary .fund-count {
+            font-size: 0.95rem;
+            color: #555;
+        }
+        .fund-summary .fund-count strong {
+            color: #33b5e5;
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+        .fund-summary .fund-total-label {
+            font-size: 0.8rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .fund-summary .fund-total {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #28a745;
+            line-height: 1.2;
+        }
     </style>
 </head>
 
@@ -150,6 +201,26 @@
                   <p class="text-muted">Thống kê điểm danh và đóng quỹ theo tháng.</p>
               </section>
           </section>
+
+          <!--Fund summary (tổng hợp quỹ) - shown at top of page, reflects the selected month-->
+          <div id="fundSummary" class="fund-summary" style="display:none;">
+              <div class="row align-items-center">
+                  <div class="col-md-1 text-center">
+                      <i class="fas fa-coins fund-icon"></i>
+                  </div>
+                  <div class="col-md-7">
+                      <div class="fund-label">TỔNG HỢP QUỸ</div>
+                      <div class="fund-month">Tháng <span id="fundSummaryMonth">--/----</span></div>
+                      <div class="fund-count">
+                          <strong id="fundSummaryCount">0</strong> người đã đóng quỹ × 160.000 VNĐ
+                      </div>
+                  </div>
+                  <div class="col-md-4 text-md-right">
+                      <div class="fund-total-label">Tổng tiền</div>
+                      <div class="fund-total" id="fundSummaryTotal">0 VNĐ</div>
+                  </div>
+              </div>
+          </div>
 
           <hr class="my-4">
 
@@ -317,6 +388,44 @@
   const $emptyState = $('#emptyState');
   const $noSearchResults = $('#noSearchResults');
   const $searchQueryDisplay = $('#searchQueryDisplay');
+
+  // Fund summary DOM refs
+  const $fundSummary = $('#fundSummary');
+  const $fundSummaryMonth = $('#fundSummaryMonth');
+  const $fundSummaryCount = $('#fundSummaryCount');
+  const $fundSummaryTotal = $('#fundSummaryTotal');
+
+  // ===== Fund summary =====
+  // Each member pays 160,000 VND/month. Total = count × 160,000.
+  const FUND_AMOUNT_PER_PERSON = 160000;
+
+  // Format number as Vietnamese currency: 1600000 -> "1.600.000 VNĐ"
+  function formatVND(amount) {
+    return amount.toLocaleString('vi-VN') + ' VNĐ';
+  }
+
+  // Recalculate and render the fund summary card at the top of the page.
+  // Counts unique people who paid for the SELECTED month (not just visible rows,
+  // so search filters don't affect the total). Called from renderTable() and
+  // updateStatsBar() so it stays in sync with month changes and new payments.
+  function updateFundSummary() {
+    const selectedMonth = parseInt($monthSelect.val(), 10);
+    const selectedYear = parseInt($yearSelect.val(), 10);
+    const thangKey = String(selectedMonth).padStart(2, '0') + '/' + selectedYear;
+
+    // Count unique people who paid for the selected month
+    let count = 0;
+    fundByPersonMap.forEach((monthSet) => {
+      if (monthSet.has(thangKey)) count++;
+    });
+
+    const total = count * FUND_AMOUNT_PER_PERSON;
+
+    $fundSummaryMonth.text(thangKey);
+    $fundSummaryCount.text(count);
+    $fundSummaryTotal.text(formatVND(total));
+    $fundSummary.show();
+  }
 
   // ===== Helpers =====
   function getCellValue(row, idx) {
@@ -624,6 +733,9 @@
       `;
       $resultsBody.append(row);
     });
+
+    // Refresh the fund summary card at the top of the page
+    updateFundSummary();
   }
 
   // ===== Close fund for a member in the selected month =====
@@ -774,6 +886,9 @@
       `<span class="stat-item"><strong>${totalSessions}</strong> buổi tổng cộng</span>` +
       `<span class="stat-item"><strong>${totalFundPaid}</strong>/${totalAttended} đã đóng quỹ</span>`
     );
+
+    // Refresh the fund summary card at the top of the page
+    updateFundSummary();
   }
 
   // ===== Init =====
