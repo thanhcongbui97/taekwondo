@@ -606,6 +606,7 @@
 
     // Collect all members who attended in the selected month
     const allMembers = []; // [{ name, dates: [dd/mm/yyyy, ...] }]
+    const attendedKeys = new Set(); // track who already attended (to avoid duplicates below)
     attendanceByPersonMap.forEach((dateSet, key) => {
       const datesInMonth = [];
       dateSet.forEach(dateStr => {
@@ -628,6 +629,21 @@
           name: dateSet._displayName || key,
           dates: datesInMonth,
           count: datesInMonth.length
+        });
+        attendedKeys.add(key);
+      }
+    });
+
+    // Also include people who paid the fund for this month but did NOT attend.
+    // These show up with 0 buổi and "Đã đóng quỹ" so admins can see who paid
+    // without needing to attend (e.g. paid in advance, or paid for someone else).
+    fundByPersonMap.forEach((monthSet, key) => {
+      if (monthSet.has(thangKey) && !attendedKeys.has(key)) {
+        allMembers.push({
+          key: key,
+          name: monthSet._displayName || key,
+          dates: [],
+          count: 0
         });
       }
     });
@@ -653,7 +669,7 @@
     }).length;
 
     let statsHtml = `<i class="fas fa-calendar-check"></i> Tháng <strong>${selectedMonth}/${selectedYear}</strong>: ` +
-      `<span class="stat-item"><strong>${totalAttended}</strong> người điểm danh</span>` +
+      `<span class="stat-item"><strong>${totalAttended}</strong> thành viên</span>` +
       `<span class="stat-item"><strong>${totalSessions}</strong> buổi tổng cộng</span>` +
       `<span class="stat-item"><strong>${totalFundPaid}</strong>/${totalAttended} đã đóng quỹ</span>`;
     if (searchQuery && allMembers.length > members.length) {
@@ -884,7 +900,7 @@
 
     $statsBar.html(
       `<i class="fas fa-calendar-check"></i> Tháng <strong>${selectedMonth}/${selectedYear}</strong>: ` +
-      `<span class="stat-item"><strong>${totalAttended}</strong> người điểm danh</span>` +
+      `<span class="stat-item"><strong>${totalAttended}</strong> thành viên</span>` +
       `<span class="stat-item"><strong>${totalSessions}</strong> buổi tổng cộng</span>` +
       `<span class="stat-item"><strong>${totalFundPaid}</strong>/${totalAttended} đã đóng quỹ</span>`
     );
