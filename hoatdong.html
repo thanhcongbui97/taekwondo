@@ -599,6 +599,11 @@
     const selectedYear = parseInt($yearSelect.val(), 10);
     const thangKey = String(selectedMonth).padStart(2, '0') + '/' + selectedYear;
 
+    // Refresh the fund summary card at the top of the page FIRST,
+    // so it always reflects the selected month even when this function
+    // returns early (no attendance data, or search filtered everything out).
+    updateFundSummary();
+
     // Collect all members who attended in the selected month
     const allMembers = []; // [{ name, dates: [dd/mm/yyyy, ...] }]
     attendanceByPersonMap.forEach((dateSet, key) => {
@@ -733,9 +738,6 @@
       `;
       $resultsBody.append(row);
     });
-
-    // Refresh the fund summary card at the top of the page
-    updateFundSummary();
   }
 
   // ===== Close fund for a member in the selected month =====
