@@ -435,10 +435,19 @@
   // ===== Authentication =====
   // Reuse the same auth as quanli.html (sessionStorage key: 'quanli_authed').
   // The login/logout button in the header is handled by js/modules/auth-nav.js.
+  // This page requires login: unauthenticated visitors are redirected to
+  // login.html (with a `return` param so they come back here after login).
   const AUTH_STORAGE_KEY = 'quanli_authed';
+  const LOGIN_PAGE = 'login.html';
 
   function isAuthed() {
     return sessionStorage.getItem(AUTH_STORAGE_KEY) === '1';
+  }
+
+  // Auth gate: redirect to login if not authenticated. Must run BEFORE any
+  // data loading or UI rendering so unauthenticated users never see the page.
+  if (!isAuthed()) {
+    window.location.replace(LOGIN_PAGE + '?return=hoatdong.html');
   }
 
   // ===== Config =====

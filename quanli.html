@@ -466,12 +466,19 @@
   // ===== Authentication =====
   // Auth state is stored in sessionStorage by login.html.
   // The login/logout button in the header is handled by js/modules/auth-nav.js.
-  // Data loading still works for unauthenticated users (will fail gracefully
-  // if sheets are private); they can click "Đăng nhập" in the header to log in.
+  // This page requires login: unauthenticated visitors are redirected to
+  // login.html (with a `return` param so they come back here after login).
   const AUTH_STORAGE_KEY = 'quanli_authed';
+  const LOGIN_PAGE = 'login.html';
 
   function isAuthed() {
     return sessionStorage.getItem(AUTH_STORAGE_KEY) === '1';
+  }
+
+  // Auth gate: redirect to login if not authenticated. Must run BEFORE any
+  // data loading or UI rendering so unauthenticated users never see the page.
+  if (!isAuthed()) {
+    window.location.replace(LOGIN_PAGE + '?return=quanli.html');
   }
 
   // ===== Config =====

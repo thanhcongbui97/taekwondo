@@ -139,7 +139,25 @@
 
   <script>
   const AUTH_STORAGE_KEY = 'quanli_authed';
-  const TARGET_PAGE = 'quanli.html';
+  const DEFAULT_TARGET_PAGE = 'quanli.html';
+
+  // Read the `return` query param so the user comes back to the page they
+  // were trying to visit (e.g. hoatdong.html). Only allow same-origin
+  // filenames to prevent open-redirect abuse.
+  function getReturnTarget() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const ret = params.get('return');
+      if (!ret) return DEFAULT_TARGET_PAGE;
+      // Allow only simple filenames in the same directory (no protocol,
+      // no slashes, no query/fragment). Examples accepted: "quanli.html",
+      // "hoatdong.html". Rejected: "https://evil.com", "../etc/passwd".
+      if (/^[a-zA-Z0-9_\-]+\.html$/.test(ret)) return ret;
+    } catch (e) { /* fall through */ }
+    return DEFAULT_TARGET_PAGE;
+  }
+
+  const TARGET_PAGE = getReturnTarget();
 
   async function sha256(text) {
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
